@@ -1,5 +1,6 @@
 import express from "express";
 import db from "./src/database/db.js";
+import userRoutes from './src/v1/routes/usuarioRoutes.js';
 
 // Crear la aplicación de express
 const app = express();
@@ -19,6 +20,7 @@ try{
 }
 
 // Routes
+app.use('/api/v1/users', userRoutes)
 
 // Iniciar el servidor
 app.listen(PORT, () => {
