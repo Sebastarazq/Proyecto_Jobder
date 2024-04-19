@@ -1,4 +1,5 @@
 import express from "express";
+import db from "./src/database/db.js";
 
 // Crear la aplicación de express
 const app = express();
@@ -12,7 +13,7 @@ app.use(express.json());
 try{
     await db.authenticate();
     db.sync()
-    console.log('Conexión Correcta a la Base de Datos de MySQL')
+    console.log(`Conexión Correcta a ${process.env.DATABASE} de MySQL`)
 } catch(error){
     console.log(error)
 }
