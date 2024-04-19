@@ -1,5 +1,6 @@
 import Usuario from '../models/Usuario.js';
-import hashPassword from '../helpers/hash.js';
+import {hashPassword, comparePasswords} from '../helpers/hash.js';
+import bcrypt from 'bcrypt';
 
 const getAllUsers = async () => {
   try {
@@ -71,6 +72,23 @@ const confirmUser = async (token) => {
       throw error;
     }
 };
+
+const login = async (email, password) => {
+  try {
+    const user = await Usuario.findOne({ where: { email }, attributes: ['password'] });
+    if (!user) {
+      throw new Error('La cuenta no existe');
+    }
+    const isValidPassword = await comparePasswords(password, user.password);
+    if (!isValidPassword) {
+      throw new Error('Credenciales inválidas');
+    }
+    return user;
+  } catch (error) {
+    throw error;
+  }
+};
+
   
 
 export default {
@@ -78,4 +96,5 @@ export default {
   getUserById,
   createUser,
   confirmUser,
+  login
 };

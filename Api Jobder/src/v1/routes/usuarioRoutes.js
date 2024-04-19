@@ -13,5 +13,7 @@ router.post('/register', userController.registerUser);
 
 router.post('/confirm/:token', userController.confirmUser); // Nueva ruta para confirmar usuario
 
+router.post('/login', userController.login); // ruta para iniciar sesión
+
 
 export default router;

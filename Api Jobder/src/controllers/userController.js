@@ -1,6 +1,6 @@
 import validator from 'validator';
 import userService from '../services/userService.js';
-import { generaCodigo } from '../helpers/tokens.js';
+import { generaCodigo,generarJWT } from '../helpers/tokens.js';
 import emailRegistro from '../helpers/email.js';
 
 const getAllUsers = async (req, res) => {
@@ -94,6 +94,30 @@ const confirmUser = async (req, res) => {
       res.status(500).json({ message: 'Error al confirmar usuario' });
     }
   };
+
+  const login = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Correo electrónico y contraseña son obligatorios' });
+      }
+      const user = await userService.login(email, password);
+      if (!user) {
+        return res.status(401).json({ message: 'Correo electrónico o contraseña incorrectos' });
+      }
+      const token = generarJWT(user);
+      res.status(200).json({ token });
+    } catch (error) {
+      console.error(error);
+      if (error.message === 'La cuenta no existe') {
+        return res.status(401).json({ message: 'La cuenta no existe' });
+      }
+      if (error.message === 'Credenciales inválidas') {
+        return res.status(401).json({ message: 'Credenciales inválidas' });
+      }
+      res.status(500).json({ message: 'Error al iniciar sesión' });
+    }
+  };
   
 
 export default {
@@ -101,4 +125,5 @@ export default {
   getUserById,
   registerUser,
   confirmUser,
+  login,
 };
