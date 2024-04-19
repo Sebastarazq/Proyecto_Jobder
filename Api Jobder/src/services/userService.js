@@ -1,4 +1,5 @@
 import Usuario from '../models/Usuario.js';
+import hashPassword from '../helpers/hash.js';
 
 const getAllUsers = async () => {
   try {
@@ -9,7 +10,17 @@ const getAllUsers = async () => {
   }
 };
 
-const createUser = async (nombre, email, celular, password, edad, genero, categoria, descripcion, latitud, longitud) => {
+// Servicio para obtener un usuario por su ID
+const getUserById = async (userId) => {
+    try {
+      const user = await Usuario.findByPk(userId); // Buscar el usuario por su ID en la base de datos
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+const createUser = async (nombre, email, celular, password, edad, genero, categoria, descripcion, latitud, longitud,token) => {
   try {
     // Verificar si ya existe un usuario con el mismo correo electrónico
     const existingUser = await Usuario.findOne({ where: { email } });
@@ -17,18 +28,22 @@ const createUser = async (nombre, email, celular, password, edad, genero, catego
       throw new Error('El correo electrónico ya está registrado');
     }
 
-    // Crear el nuevo usuario en la base de datos
+    // Encriptar la contraseña antes de guardarla en la base de datos
+    const hashedPassword = await hashPassword.hashPassword(password);
+
+    // Crear el nuevo usuario en la base de datos con la contraseña encriptada
     const newUser = await Usuario.create({
       nombre,
       email,
       celular,
-      password,
+      password: hashedPassword, // Guardar la contraseña encriptada
       edad,
       genero,
       categoria,
       descripcion,
       latitud,
-      longitud
+      longitud,
+      token
     });
 
     // Retornar el nuevo usuario creado
@@ -39,7 +54,28 @@ const createUser = async (nombre, email, celular, password, edad, genero, catego
   }
 };
 
+const confirmUser = async (token) => {
+    try {
+      // Buscar usuario por token
+      const user = await Usuario.findOne({ where: { token } });
+  
+      if (!user) {
+        return null; // Usuario no encontrado
+      }
+  
+      // Actualizar usuario
+      await Usuario.update({ token: null, confirmado: true }, { where: { token } });
+  
+      return user;
+    } catch (error) {
+      throw error;
+    }
+};
+  
+
 export default {
   getAllUsers,
-  createUser
+  getUserById,
+  createUser,
+  confirmUser,
 };

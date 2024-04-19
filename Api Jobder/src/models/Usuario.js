@@ -50,9 +50,21 @@ const Usuario = db.define('Usuarios', {
   longitud: {
     type: DataTypes.DECIMAL(11, 8),
     allowNull: true
+  },
+  token: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  confirmado: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
   }
 }, {
-  timestamps: false
+  timestamps: false,
+  defaultScope: {
+    attributes: { exclude: ['password'] } // Excluir el campo de contraseña en las consultas por defecto
+  }
 });
 
 export default Usuario;
