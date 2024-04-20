@@ -22,9 +22,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener el tamaño de la pantalla
-    final Size screenSize = MediaQuery.of(context).size;
-
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

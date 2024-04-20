@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_card_swiper/flutter_card_swiper.dart';
+import 'package:app_jobder/domain/entities/user_data.dart';
+import 'package:app_jobder/presentation/screens/shared/widgets/navigation_bar.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({Key? key}) : super(key: key);
@@ -11,7 +13,9 @@ class UsersScreen extends StatefulWidget {
 }
 
 class _UsersScreenState extends State<UsersScreen> {
-  // Sample user data (replace with actual data fetching)
+  final CardSwiperController controller = CardSwiperController();
+
+  // Datos de usuarios de muestra (reemplaza con datos reales)
   final List<UserData> _users = [
     UserData(
       name: 'John Doe',
@@ -20,78 +24,191 @@ class _UsersScreenState extends State<UsersScreen> {
       bio: 'Adventurer, dog lover, foodie',
       sharedInterests: ['Travel', 'Hiking', 'Cooking'],
     ),
-    // Add more sample users here
+    UserData(
+      name: 'Alice Smith',
+      imageUrl: 'https://picsum.photos/200/300',
+      age: 25,
+      bio: 'Nature enthusiast, bookworm',
+      sharedInterests: ['Reading', 'Photography', 'Running'],
+    ),
+    UserData(
+      name: 'Bob Johnson',
+      imageUrl: 'https://picsum.photos/200/300',
+      age: 35,
+      bio: 'Tech geek, gamer',
+      sharedInterests: ['Technology', 'Gaming', 'Movies'],
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final bool isControllerAvailable = mounted;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Potential Matches'),
-      ),
-      body: ListView.builder(
-        itemCount: _users.length,
-        itemBuilder: (context, index) {
-          final user = _users[index];
-          return _buildUserCard(user);
-        },
-      ),
-    );
-  }
-
-  Widget _buildUserCard(UserData user) {
-    return Card(
-      margin: const EdgeInsets.all(10),
-      child: ListTile(
-        onTap: () {
-          // Navigate to the user's profile screen
-          GoRouter.of(context).go('/profile/${user.name}');
-        },
-        leading: CircleAvatar(
-          radius: 30,
-          backgroundImage: NetworkImage(user.imageUrl),
-        ),
-        title: Text(user.name),
-        subtitle: Text('${user.age} years old'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        backgroundColor: Colors.transparent, // Make app bar transparent
+        elevation: 0, // Remove app bar elevation
+        title: const Row(
           children: [
-            IconButton(
-              onPressed: () {
-                // Handle "Like" action
-                print('Liked ${user.name}');
-              },
-              icon: const Icon(Icons.favorite),
-              color: Colors.red,
-            ),
-            IconButton(
-              onPressed: () {
-                // Handle "Pass" action
-                print('Passed ${user.name}');
-              },
-              icon: const Icon(Icons.close),
-              color: Colors.grey,
-            ),
+            Icon(Icons.work), // Icono de trabajo
+            SizedBox(width: 8), // Espacio entre el icono y el título
+            Text('Jobder'), // Título
           ],
         ),
       ),
+      extendBodyBehindAppBar: true, // Extend body behind app bar
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFEE805F), Color(0xFF096BFF)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: _users.isNotEmpty
+                    ? CardSwiper(
+                        controller: controller,
+                        cardsCount: _users.length,
+                        cardBuilder: (context, index, percentX, percentY) {
+                          final user = _users[index];
+                          return UserCard(
+                            user: user,
+                            controller: controller,
+                            onSwipeLeft: () {
+                              if (isControllerAvailable) {
+                                controller.swipe(CardSwiperDirection.left);
+                              }
+                            },
+                            onSwipeRight: () {
+                              if (isControllerAvailable) {
+                                controller.swipe(CardSwiperDirection.right);
+                              }
+                            },
+                          );
+                        },
+                      )
+                    : const Center(
+                        child: Text(
+                          'No more users to match!',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),
     );
   }
 }
 
-// Sample user data model (replace with your actual data model)
-class UserData {
-  final String name;
-  final String imageUrl;
-  final int age;
-  final String? bio;
-  final List<String>? sharedInterests;
+class UserCard extends StatelessWidget {
+  final UserData user;
+  final VoidCallback? onSwipeLeft;
+  final VoidCallback? onSwipeRight;
+  final CardSwiperController? controller;
 
-  UserData({
-    required this.name,
-    required this.imageUrl,
-    required this.age,
-    this.bio,
-    this.sharedInterests,
-  });
+  const UserCard({
+    Key? key,
+    required this.user,
+    this.controller,
+    this.onSwipeLeft,
+    this.onSwipeRight,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 3,
+            blurRadius: 7,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: 3,
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+                  child: Image.network(
+                    user.imageUrl,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user.name,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        '${user.age} years old',
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        user.bio ?? '',
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Positioned(
+            bottom: 20.0,
+            left: 80.0,
+            child: FloatingActionButton(
+              onPressed: onSwipeLeft,
+              child: const Icon(Icons.close),
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          Positioned(
+            bottom: 20.0,
+            right: 80.0,
+            child: FloatingActionButton(
+              onPressed: onSwipeRight,
+              child: const Icon(Icons.check),
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 class TerminosScreen extends StatelessWidget {
   const TerminosScreen({Key? key}) : super(key: key);
