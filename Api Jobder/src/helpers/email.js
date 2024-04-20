@@ -41,4 +41,44 @@ const emailRegistro = async (datos) => {
     }
 };
 
-export default emailRegistro;
+const recuperacionPassword = async ({ email, nombre, resetCode }) => {
+    const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: 'Jobder <noreply@jobder.com>',
+            to: email,
+            subject: 'Recuperación de contraseña en Jobder',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #007bff;">Recuperación de contraseña en Jobder para ${nombre}</h2>
+                    <p style="font-size: 16px;">Hemos recibido una solicitud para restablecer tu contraseña en Jobder.</p>
+                    <div style="background-color: #f4f4f4; padding: 20px; border-radius: 10px; text-align: center;">
+                        <h3 style="color: #007bff; margin-bottom: 10px;">Código de recuperación:</h3>
+                        <p style="font-size: 24px; font-weight: bold; margin: 10px 0;">${resetCode}</p>
+                    </div>
+                    <p style="font-size: 16px; margin-top: 20px;">Por favor, utiliza este código para restablecer tu contraseña en Jobder.</p>
+                    <p style="font-size: 16px; color: #888;">Si no has solicitado el restablecimiento de contraseña, puedes ignorar este correo.</p>
+                    <p style="font-size: 16px; color: #888;">¡Gracias!</p>
+                </div>
+            `,
+        });
+
+        console.log(`Correo de recuperación de contraseña enviado a ${email} para ${nombre}`);
+    } catch (error) {
+        console.error('Error al enviar el correo de recuperación de contraseña:', error);
+        throw error;
+    }
+};
+
+export {
+    emailRegistro,
+    recuperacionPassword
+};

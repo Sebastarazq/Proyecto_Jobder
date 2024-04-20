@@ -1,7 +1,8 @@
 import validator from 'validator';
 import userService from '../services/userService.js';
 import { generaCodigo,generarJWT } from '../helpers/tokens.js';
-import emailRegistro from '../helpers/email.js';
+import {emailRegistro, recuperacionPassword} from '../helpers/email.js';
+import { hashPassword } from '../helpers/hash.js';
 
 const getAllUsers = async (req, res) => {
   try {
@@ -140,6 +141,12 @@ const confirmUser = async (req, res) => {
       const userId = req.params.id;
       let updates = req.body; // Contiene los campos a actualizar
   
+      // Verifica si hay una contraseña en las actualizaciones
+      if ('password' in updates) {
+        // Hashea la contraseña
+        updates.password = await hashPassword(updates.password);
+      }
+  
       // Filtra los campos vacíos del objeto updates
       updates = Object.fromEntries(
         Object.entries(updates).filter(([key, value]) => value !== '')
@@ -174,7 +181,79 @@ const confirmUser = async (req, res) => {
       res.status(500).json({ message: 'Error al actualizar la información del usuario' });
     }
   };
+
+  const sendPasswordResetCode = async (req, res) => {
+    try {
+      const { email } = req.body;
   
+      // Validar que se haya proporcionado un correo electrónico
+      if (!email) {
+        return res.status(400).json({ message: 'El correo electrónico es obligatorio' });
+      }
+  
+      try {
+        // Verificar si el usuario existe
+        const user = await userService.getUserByEmail(email);
+        // Verificar si el usuario está confirmado
+        if (!user.confirmado) {
+          return res.status(401).json({ message: 'El usuario no está confirmado' });
+        }
+  
+        // Generar código de recuperación
+        const resetCode = generaCodigo();
+  
+        // Guardar el código en la base de datos
+        await userService.savePasswordResetCode(user.usuario_id, resetCode);
+  
+        // Enviar correo con el código de recuperación
+        await recuperacionPassword({ email, nombre: user.nombre, resetCode });
+  
+        return res.status(200).json({ message: 'Código de recuperación de contraseña enviado con éxito' });
+      } catch (error) {
+        // Manejar errores específicos
+        if (error.statusCode === 404) {
+          // Usuario no encontrado
+          return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        console.error(error);
+        return res.status(500).json({ message: 'Error interno del servidor' });
+      }
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  };
+
+const resetPassword = async (req, res) => {
+  try {
+      const { token } = req.params; // Obtiene el token de la URL
+      const { newPassword } = req.body; // Obtiene la nueva contraseña del cuerpo de la solicitud
+
+      // Verifica que se haya proporcionado una nueva contraseña
+      if (!newPassword) {
+          return res.status(400).json({ message: 'La nueva contraseña es obligatoria' });
+      }
+
+      // Verifica si el token es válido y obtiene el ID de usuario asociado
+      const userId = await userService.verifyResetCodeAndGetUserId(token);
+
+      // Si no se encuentra ningún usuario con el token proporcionado
+      if (!userId) {
+          return res.status(404).json({ message: 'Token inválido o expirado' });
+      }
+
+      // Actualiza la contraseña del usuario en la base de datos
+      await userService.updatePassword(userId, newPassword);
+
+      // Envía una respuesta exitosa
+      res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al restablecer la contraseña' });
+  }
+};
+
+
   
   
 
@@ -186,5 +265,7 @@ export default {
   registerUser,
   confirmUser,
   login,
-  updateUserPartialInfo
+  updateUserPartialInfo,
+  sendPasswordResetCode,
+  resetPassword
 };

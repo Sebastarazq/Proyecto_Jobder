@@ -234,6 +234,84 @@ router.post('/login', userController.login); // ruta para iniciar sesión
  */
 router.patch('/update/:id', userController.updateUserPartialInfo); // Ruta para actualizar parcialmente la información del usuario
 
+/**
+ * @swagger
+ * /api/v1/users/forgot-password:
+ *   post:
+ *     summary: Envía un código de recuperación de contraseña al correo electrónico del usuario.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico del usuario para enviar el código de recuperación.
+ *             required:
+ *               - email
+ *           example:
+ *             email: ejemplo@correo.com
+ *     responses:
+ *       200:
+ *         description: Código de recuperación de contraseña enviado con éxito.
+ *       400:
+ *         description: Error en los datos de entrada.
+ *       404:
+ *         description: Usuario no encontrado.
+ *       500:
+ *         description: Error al enviar el correo de recuperación de contraseña.
+ */
+router.post('/forgot-password', userController.sendPasswordResetCode); // Ruta para enviar código de recuperación de contraseña
+
+/**
+ * @swagger
+ * openapi: "3.0.0"
+ * info:
+ *   title: API de Restablecimiento de Contraseña
+ *   version: "1.0.0"
+ * paths:
+ *   /api/v1/users/password/reset/confirm/{token}:
+ *     post:
+ *       summary: Restablecer contraseña con código de recuperación.
+ *       parameters:
+ *         - in: path
+ *           name: token
+ *           required: true
+ *           schema:
+ *             type: string
+ *           description: Código de recuperación de contraseña.
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 newPassword:
+ *                   type: string
+ *               required:
+ *                 - newPassword
+ *             example:
+ *               newPassword: nuevaContraseña123
+ *       responses:
+ *         200:
+ *           description: Contraseña restablecida con éxito.
+ *         400:
+ *           description: Error de solicitud, por ejemplo, falta el cuerpo de la solicitud.
+ *         401:
+ *           description: Token de recuperación de contraseña inválido.
+ *         404:
+ *           description: Usuario no encontrado.
+ *         500:
+ *           description: Error interno del servidor.
+ */
+// Ruta para restablecer la contraseña utilizando el código de recuperación
+router.post('/password/reset/confirm/:token', userController.resetPassword);
+
+
+
 
 
 export default router;

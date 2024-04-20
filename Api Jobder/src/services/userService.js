@@ -137,6 +137,81 @@ const updateUserPartialInfo = async (userId, updates) => {
   }
 };
 
+const getUserByEmail = async (email) => {
+  try {
+    const user = await Usuario.findOne({ where: { email } });
+    if (!user || user.email !== email) {
+      console.log('No se encontró ningún usuario con el correo electrónico proporcionado:', email);
+      const error = new Error('Usuario no encontrado con el correo electrónico proporcionado');
+      error.statusCode = 404; // Código de estado HTTP 404 para "No encontrado"
+      throw error;
+    }
+    return user;
+  } catch (error) {
+    throw error; // Reenviar el error para ser manejado en el controlador
+  }
+};
+
+const savePasswordResetCode = async (userId, resetCode) => {
+  try {
+    const user = await Usuario.findByPk(userId);
+    if (!user) {
+      const error = new Error('Usuario no encontrado');
+      error.statusCode = 404; // Código de estado HTTP 404 para "No encontrado"
+      throw error;
+    }
+    user.token = resetCode;
+    await user.save();
+    return resetCode;
+  } catch (error) {
+    throw error; // Reenviar el error para ser manejado en el controlador
+  }
+};
+
+const verifyResetCodeAndGetUserId = async (token) => {
+  try {
+      // Busca un usuario con el token de restablecimiento proporcionado
+      const user = await Usuario.findOne({ where: { token } });
+
+      // Si no se encuentra ningún usuario con el token proporcionado
+      if (!user) {
+          return null;
+      }
+
+      // Devuelve el ID de usuario asociado al token
+      return user.usuario_id;
+  } catch (error) {
+      throw error;
+  }
+};
+
+const updatePassword = async (userId, newPassword) => {
+  try {
+      // Busca el usuario por su ID
+      const user = await Usuario.findByPk(userId);
+
+      // Si no se encuentra el usuario
+      if (!user) {
+          throw new Error('Usuario no encontrado');
+      }
+
+      // Hash de la nueva contraseña
+      const hashedPassword = await hashPassword(newPassword);
+
+      // Actualiza la contraseña del usuario con el hash
+      user.password = hashedPassword;
+
+      // Limpia el campo de token de restablecimiento
+      user.token = null;
+
+      // Guarda los cambios en la base de datos
+      await user.save();
+  } catch (error) {
+      throw error;
+  }
+};
+
+
 export default {
   getAllUsers,
   getUserById,
@@ -144,5 +219,9 @@ export default {
   confirmUser,
   loginByEmail,
   loginByCellphone,
-  updateUserPartialInfo
+  updateUserPartialInfo,
+  getUserByEmail,
+  savePasswordResetCode,
+  verifyResetCodeAndGetUserId,
+  updatePassword
 };
