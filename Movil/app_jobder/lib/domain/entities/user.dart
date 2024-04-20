@@ -3,10 +3,9 @@ class Usuario {
   String nombre;
   String email;
   int celular;
-  String password;
   int edad;
   String genero;
-  String foto_perfil;
+  String? foto_perfil;
   String categoria;
   String? descripcion;
   double? latitud;
@@ -19,10 +18,9 @@ class Usuario {
     required this.nombre,
     required this.email,
     required this.celular,
-    required this.password,
     required this.edad,
     required this.genero,
-    required this.foto_perfil,
+    this.foto_perfil,
     required this.categoria,
     this.descripcion,
     this.latitud,

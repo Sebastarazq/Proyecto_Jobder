@@ -1,4 +1,4 @@
-import 'package:app_jobder/presentation/screens/entrada/entrada.dart';
+import 'package:app_jobder/presentation/screens/screens.dart';
 import 'package:go_router/go_router.dart';
 
 final appRouter = GoRouter(
@@ -8,6 +8,11 @@ final appRouter = GoRouter(
       path: '/',
       name: EntradaScreen.name,
       builder: (context, state) => const EntradaScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      name: LoginScreen.name,
+      builder: (context, state) => const LoginScreen(),
     ),
   ],
 );

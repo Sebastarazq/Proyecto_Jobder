@@ -1,5 +1,5 @@
-import 'package:app_jobder/presentation/screens/registro/inicio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class EntradaScreen extends StatelessWidget {
   const EntradaScreen({Key? key}) : super(key: key);
@@ -49,10 +49,8 @@ class MainScreen extends StatelessWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const Inicio()),
-                  );
+                  // Navegar a la ruta '/login' cuando se presiona el botón "Iniciar sesión"
+                  GoRouter.of(context).go('/login');
                 },
                 child: const Text('Iniciar sesión'),
               ),
