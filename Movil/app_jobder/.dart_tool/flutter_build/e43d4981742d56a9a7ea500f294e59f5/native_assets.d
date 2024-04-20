@@ -1,0 +1,1 @@
+ C:\\Users\\juans\\Documents\\7\ semestre\\Proyecto\ 3\ movil\\Proyecto_Jobder\\Movil\\app_jobder\\.dart_tool\\flutter_build\\e43d4981742d56a9a7ea500f294e59f5\\native_assets.yaml: 
