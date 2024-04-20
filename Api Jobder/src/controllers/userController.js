@@ -64,9 +64,8 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({ message: 'Usuario creado exitosamente' });
   } catch (error) {
-    console.error(error);
-    if (error.message === 'El correo electrónico ya está registrado') {
-      return res.status(400).json({ message: 'El correo electrónico ya está registrado' });
+    if (error.message === 'El correo electrónico o el número de celular ya están registrados') {
+      return res.status(400).json({ message: 'El correo electrónico o el número de celular ya están registrados' });
     }
     res.status(500).json({ message: 'Error al registrar usuario' });
   }
@@ -97,13 +96,21 @@ const confirmUser = async (req, res) => {
 
   const login = async (req, res) => {
     try {
-      const { email, password } = req.body;
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Correo electrónico y contraseña son obligatorios' });
+      const { email, password, celular } = req.body;
+      if ((!email && !celular) || !password) {
+        return res.status(400).json({ message: 'Correo electrónico/celular y contraseña son obligatorios' });
       }
-      const user = await userService.login(email, password);
+      let user;
+      if (email) {
+        user = await userService.loginByEmail(email, password);
+      } else if (celular) {
+        user = await userService.loginByCellphone(celular, password);
+      }
       if (!user) {
-        return res.status(401).json({ message: 'Correo electrónico o contraseña incorrectos' });
+        return res.status(401).json({ message: 'Correo electrónico/celular o contraseña incorrectos' });
+      }
+      if (!user.confirmado) {
+        return res.status(401).json({ message: 'La cuenta no está confirmada' });
       }
       const token = generarJWT(user);
       res.status(200).json({ token });
