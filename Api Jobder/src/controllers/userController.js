@@ -109,15 +109,23 @@ const confirmUser = async (req, res) => {
       if (!user) {
         return res.status(401).json({ message: 'Correo electrónico/celular o contraseña incorrectos' });
       }
-      if (!user.confirmado) {
-        return res.status(401).json({ message: 'La cuenta no está confirmada' });
-      }
-      const token = generarJWT(user);
+      
+      // Ajusta el objeto que se pasa a generarJWT para contener solo el id y el nombre
+      const datosParaToken = {
+        id: user.usuario_id,
+        nombre: user.nombre
+      };
+      
+      // Genera el token utilizando los datos ajustados
+      const token = generarJWT(datosParaToken);
       res.status(200).json({ token });
     } catch (error) {
       console.error(error);
       if (error.message === 'La cuenta no existe') {
         return res.status(401).json({ message: 'La cuenta no existe' });
+      }
+      if (error.message === 'La cuenta no está confirmada') {
+        return res.status(401).json({ message: 'La cuenta no está confirmada' });
       }
       if (error.message === 'Credenciales inválidas') {
         return res.status(401).json({ message: 'Credenciales inválidas' });
@@ -125,6 +133,51 @@ const confirmUser = async (req, res) => {
       res.status(500).json({ message: 'Error al iniciar sesión' });
     }
   };
+
+
+  const updateUserPartialInfo = async (req, res) => {
+    try {
+      const userId = req.params.id;
+      let updates = req.body; // Contiene los campos a actualizar
+  
+      // Filtra los campos vacíos del objeto updates
+      updates = Object.fromEntries(
+        Object.entries(updates).filter(([key, value]) => value !== '')
+      );
+  
+      // Validaciones para cada campo opcional si está presente en las actualizaciones
+      if ('email' in updates && !validator.isEmail(updates.email)) {
+        return res.status(400).json({ message: 'Formato de correo electrónico no válido' });
+      }
+  
+      if ('edad' in updates) {
+        const edadStr = String(updates.edad);
+        if (!validator.isInt(edadStr, { min: 1, max: 150 })) {
+          return res.status(400).json({ message: 'Edad no válida' });
+        }
+      }
+  
+      if ('genero' in updates && !['Masculino', 'Femenino', 'Otro'].includes(updates.genero)) {
+        return res.status(400).json({ message: 'Género no válido' });
+      }
+  
+      if ('categoria' in updates && !['Desarrollador', 'Empresario', 'Otro'].includes(updates.categoria)) {
+        return res.status(400).json({ message: 'Categoría no válida' });
+      }
+  
+      // Llama al servicio para actualizar parcialmente la información del usuario
+      await userService.updateUserPartialInfo(userId, updates);
+  
+      res.status(200).json({ message: 'Información de usuario actualizada con éxito' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al actualizar la información del usuario' });
+    }
+  };
+  
+  
+  
+
   
 
 export default {
@@ -133,4 +186,5 @@ export default {
   registerUser,
   confirmUser,
   login,
+  updateUserPartialInfo
 };

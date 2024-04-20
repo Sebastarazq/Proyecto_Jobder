@@ -1,3 +1,4 @@
+import 'package:app_jobder/presentation/screens/entrada/tyc_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -44,6 +45,21 @@ class MainScreen extends StatelessWidget {
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const TerminosScreen()),
+                  );
+                },
+                child: const Text(
+                  'Política de Privacidad y Política de Cookies',
+                  style: TextStyle(
+                    color: Colors.white,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),

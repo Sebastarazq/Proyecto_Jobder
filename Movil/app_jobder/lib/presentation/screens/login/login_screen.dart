@@ -1,3 +1,5 @@
+import 'package:app_jobder/config/helpers/crud_user.dart';
+import 'package:app_jobder/infraestructure/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,9 +13,9 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  String _email = '';
+  String _emailOrCellphone = ''; // Variable para almacenar el email o el número de celular
   String _password = '';
-  bool _useEmail = true; // Inicializado como true para que el inicio de sesión con email esté activo por defecto
+  bool _isUsingEmail = true; // Variable para indicar si se está utilizando el email
 
   @override
   Widget build(BuildContext context) {
@@ -42,12 +44,13 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               onChanged: (value) {
                 setState(() {
-                  _email = value; 
+                  _emailOrCellphone = value; // Actualizar el valor del email o el número de celular
                 });
               },
+              keyboardType: _isUsingEmail ? TextInputType.emailAddress : TextInputType.phone, // Cambiar el tipo de teclado según el tipo de entrada
               decoration: InputDecoration(
-                hintText: _useEmail ? 'Email' : 'Celular',
-                labelText: _useEmail ? 'Email' : 'Celular',
+                hintText: _isUsingEmail ? 'Email' : 'Celular', // Mostrar el texto correcto en el campo de entrada
+                labelText: _isUsingEmail ? 'Email' : 'Celular',
               ),
             ),
             const SizedBox(height: 10),
@@ -67,20 +70,45 @@ class _LoginScreenState extends State<LoginScreen> {
             TextButton(
               onPressed: () {
                 setState(() {
-                  _useEmail = !_useEmail; // Alternar entre iniciar sesión con email y celular
+                  _isUsingEmail = !_isUsingEmail; // Cambiar entre email y celular
                 });
               },
-              child: Text(_useEmail ? 'Iniciar sesión con celular' : 'Iniciar sesión con email'),
+              child: Text(_isUsingEmail ? 'Iniciar sesión con celular' : 'Iniciar sesión con email'),
             ),
             const Spacer(), 
-            Container(
+            SizedBox(
               width: double.infinity, 
               child: ElevatedButton(
-                onPressed: () {
-                  // Aquí llamarías a tu función de inicio de sesión con email y contraseña
-                  // Si _useEmail es verdadero, entonces usarías _email y _password para iniciar sesión
-                  // Si _useEmail es falso, entonces usarías _email (o _password si necesitas contraseña) para iniciar sesión con celular
-                  Navigator.pushNamed(context, '/home');
+                onPressed: () async {
+                  try {
+                    final userRepository = UserRepository();
+                    // Crear instancia de UsuarioLogin con los datos ingresados
+                    final user = UsuarioLogin(
+                      email: _isUsingEmail ? _emailOrCellphone : null, // Usar email solo si se está utilizando el email
+                      celular: _isUsingEmail ? null : int.tryParse(_emailOrCellphone), // Usar celular solo si se está utilizando el celular
+                      password: _password,
+                    );
+                    await userRepository.loginUser(user); 
+                    GoRouter.of(context).go('/home');
+                  } catch (error) {
+                    String errorMessage = 'Error al iniciar sesión';
+                    if (error is Exception) {
+                      errorMessage = error.toString();
+                    }
+                    showDialog(
+                      context: context,
+                      builder: (_) => AlertDialog(
+                        title: Text('Ops! Algo salió mal'),
+                        content: Text(errorMessage.replaceAll('Exception:', '')),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('OK'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white, backgroundColor: const Color(0xFF096BFF), 

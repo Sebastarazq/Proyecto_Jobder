@@ -71,18 +71,22 @@ const confirmUser = async (token) => {
 
 const loginByEmail = async (email, password) => {
   try {
-    const user = await Usuario.findOne({ where: { email }, attributes: ['password', 'confirmado'] });
+    const user = await Usuario.findOne({ 
+      where: { email }, 
+      attributes: ['usuario_id', 'nombre', 'password', 'confirmado'] // Ajusta 'id' por 'usuario_id'
+    });
     if (!user) {
       throw new Error('La cuenta no existe');
-    }
-    if (!user.confirmado) {
-      throw new Error('La cuenta no está confirmada');
     }
     const isValidPassword = await comparePasswords(password, user.password);
     if (!isValidPassword) {
       throw new Error('Credenciales inválidas');
     }
-    return user;
+    if (!user.confirmado) {
+      throw new Error('La cuenta no está confirmada');
+    }
+    // Devuelve solo las propiedades usuario_id y nombre del usuario
+    return { usuario_id: user.usuario_id, nombre: user.nombre };
   } catch (error) {
     throw error;
   }
@@ -90,17 +94,43 @@ const loginByEmail = async (email, password) => {
 
 const loginByCellphone = async (celular, password) => {
   try {
-    const user = await Usuario.findOne({ where: { celular }, attributes: ['password', 'confirmado'] });
+    const user = await Usuario.findOne({ 
+      where: { celular }, 
+      attributes: ['usuario_id', 'nombre', 'password', 'confirmado'] // Ajusta 'id' por 'usuario_id'
+    });
     if (!user) {
       throw new Error('La cuenta no existe');
-    }
-    if (!user.confirmado) {
-      throw new Error('La cuenta no está confirmada');
     }
     const isValidPassword = await comparePasswords(password, user.password);
     if (!isValidPassword) {
       throw new Error('Credenciales inválidas');
     }
+    if (!user.confirmado) {
+      throw new Error('La cuenta no está confirmada');
+    }
+    // Devuelve solo las propiedades usuario_id y nombre del usuario
+    return { usuario_id: user.usuario_id, nombre: user.nombre };
+  } catch (error) {
+    throw error;
+  }
+};
+
+const updateUserPartialInfo = async (userId, updates) => {
+  try {
+    // Busca el usuario por su ID
+    const user = await Usuario.findByPk(userId);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Actualiza los campos proporcionados en el objeto "updates"
+    Object.keys(updates).forEach((key) => {
+      user[key] = updates[key];
+    });
+
+    await user.save();
+
+    // Retorna el usuario actualizado
     return user;
   } catch (error) {
     throw error;
@@ -113,5 +143,6 @@ export default {
   createUser,
   confirmUser,
   loginByEmail,
-  loginByCellphone
+  loginByCellphone,
+  updateUserPartialInfo
 };

@@ -10,8 +10,6 @@ class Usuario {
   String? descripcion;
   double? latitud;
   double? longitud;
-  String? token;
-  bool? confirmado;
 
   Usuario({
     required this.usuario_id,
@@ -25,7 +23,5 @@ class Usuario {
     this.descripcion,
     this.latitud,
     this.longitud,
-    this.token,
-    this.confirmado,
   });
 }
