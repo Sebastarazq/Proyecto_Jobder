@@ -19,5 +19,10 @@ final appRouter = GoRouter(
       name: UsersScreen.name,
       builder: (context, state) => const UsersScreen(),
     ),
+    GoRoute(
+      path: '/registro',
+      name: RegistroScreen1.name,
+      builder: (context, state) => const RegistroScreen1(),
+    ),
   ],
 );

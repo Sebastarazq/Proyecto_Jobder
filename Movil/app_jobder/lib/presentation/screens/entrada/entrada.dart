@@ -71,7 +71,9 @@ class MainScreen extends StatelessWidget {
                 child: const Text('Iniciar sesión'),
               ),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  GoRouter.of(context).go('/registro');
+                },
                 child: const Text('Crear cuenta'),
               ),
             ],
