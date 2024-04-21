@@ -8,5 +8,8 @@ const router = express.Router();
 // Ruta para asociar habilidades a un usuario
 router.post('/asociar', usuarioHabilidadController.asociarHabilidadesUsuario);
 
+// Nueva ruta para asociar habilidades a un usuario con usuario_id
+router.post('/asociar2', usuarioHabilidadController.asociarHabilidadesUsuario2);
+
 // Exporta el router
 export default router;

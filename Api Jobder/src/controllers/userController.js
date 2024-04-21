@@ -77,6 +77,8 @@ const registerUser = async (req, res) => {
 const confirmUser = async (req, res) => {
     try {
       const token = req.params.token;
+
+      console.log(token)
   
       // Validar token
       if (!token || !validator.isAlphanumeric(token) || token.length !== 5) {

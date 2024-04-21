@@ -6,23 +6,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UserRepository {
   final Dio _dio = Dio();
 
-  int? _userId; // Variable para almacenar el usuario_id
-
-  int? get userId => _userId; // Getter para obtener el usuario_id
-  
-  Future<void> enviarCodigo(String token) async {
+  Future<int> enviarCodigo(String token) async {
     try {
       final response = await _dio.post(
-        'http://localhost:3000/api/v1/users/confirm/$token',
+        'http://192.168.1.5:3000/api/v1/users/confirm/$token',
       );
 
       // Verificar si la respuesta es exitosa
       if (response.statusCode == 200) {
         // Mostrar el mensaje recibido del servidor
-        final String message = response.data['message'];
-        _userId = response.data['devolverId'];
-
-        // Realiza las acciones necesarias con los datos obtenidos
+        return response.data['devolverId'] as int;
       } else {
         // Si la respuesta no es exitosa, lanzar una excepción con el mensaje del servidor
         throw Exception('Error en la solicitud: ${response.data['message']}');
@@ -40,6 +33,7 @@ class UserRepository {
     }
   }
 
+
   Future<void> createUser(UserModel user) async {
     try {
       final response = await _dio.post(
@@ -50,7 +44,6 @@ class UserRepository {
       // Verificar si la respuesta es exitosa
       if (response.statusCode == 201) {
         // Mostrar el mensaje recibido del servidor
-        final String message = response.data['message'];
       } else {
         // Si la respuesta no es exitosa, lanzar una excepción con el mensaje del servidor
         throw Exception('Error en la solicitud: ${response.data['message']}');
