@@ -160,7 +160,7 @@ class _UbicacionScreenState extends State<UbicacionScreen> {
   Future<void> _goToUserLocation() async {
     try {
       final GoogleMapController controller = await _controller.future;
-      await controller.animateCamera(CameraUpdate.newLatLngZoom(_initialCameraPosition, 14));
+      await controller.animateCamera(CameraUpdate.newLatLngZoom(_initialCameraPosition, 15));
     } catch (e) {
       // Manejo de errores
       print('Error al ir a la ubicación del usuario: $e');
