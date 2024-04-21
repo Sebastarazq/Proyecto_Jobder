@@ -15,7 +15,7 @@ class UsersScreen extends StatefulWidget {
 class _UsersScreenState extends State<UsersScreen> {
   final CardSwiperController controller = CardSwiperController();
 
-  // Datos de usuarios de muestra (reemplaza con datos reales)
+  // Datos de usuarios de muestra
   final List<UserData> _users = [
     UserData(
       name: 'John Doe',

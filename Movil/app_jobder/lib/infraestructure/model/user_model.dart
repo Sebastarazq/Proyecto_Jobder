@@ -1,4 +1,3 @@
-import 'package:app_jobder/domain/entities/user.dart';
 
 class UsuarioLogin {
   String? email;
@@ -22,11 +21,11 @@ class UsuarioLogin {
 }
 
 class UserModel {
-  int usuarioId;
   String nombre;
   String email;
   int celular;
   int edad;
+  String password;
   String genero;
   String? fotoPerfil;
   String categoria;
@@ -35,10 +34,10 @@ class UserModel {
   double? longitud;
 
   UserModel({
-    required this.usuarioId,
     required this.nombre,
     required this.email,
     required this.celular,
+    required this.password,
     required this.edad,
     required this.genero,
     this.fotoPerfil,
@@ -50,10 +49,10 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      usuarioId: json['usuario_id'],
       nombre: json['nombre'],
       email: json['email'],
       celular: json['celular'],
+      password: json['password'],
       edad: json['edad'],
       genero: json['genero'],
       fotoPerfil: json['foto_perfil'],
@@ -66,10 +65,10 @@ class UserModel {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {
-      'usuario_id': usuarioId,
       'nombre': nombre,
       'email': email,
       'celular': celular,
+      'password': password,
       'edad': edad,
       'genero': genero,
       'categoria': categoria,
@@ -83,8 +82,7 @@ class UserModel {
     return data;
   }
 
-  Usuario toUserEntity() => Usuario(
-    usuario_id: usuarioId,
+  /* Usuario toUserEntity() => Usuario(
     nombre: nombre,
     email: email,
     celular: celular,
@@ -95,5 +93,5 @@ class UserModel {
     descripcion: descripcion,
     latitud: latitud,
     longitud: longitud,
-  );
+  ); */
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:app_jobder/config/helpers/crud_user.dart';
+import 'package:app_jobder/presentation/screens/registro/email_code_screen.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:app_jobder/domain/entities/create_user.dart';
 
@@ -30,6 +32,9 @@ class _RegistroScreen2State extends State<RegistroScreen2> {
   int _edad = 18;
   String _categoria = 'Desarrollador';
   bool _locationPermissionGranted = false;
+  bool _loading = false; // Variable para controlar si se está cargando
+
+  final UserRepository _userRepository = UserRepository();
 
   @override
   void initState() {
@@ -117,11 +122,13 @@ class _RegistroScreen2State extends State<RegistroScreen2> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ElevatedButton(
-              onPressed: _locationPermissionGranted
+              onPressed: _locationPermissionGranted && !_loading // Solo se puede presionar el botón si no está cargando
                   ? () async {
+                      setState(() {
+                        _loading = true; // Se establece el estado de carga
+                      });
                       await _getLocation();
 
-                      // Crea el objeto UsuarioCreacion cuando se presiona el botón CONTINUE
                       UsuarioCreacion usuario = UsuarioCreacion(
                         nombre: widget.nombre,
                         email: widget.email,
@@ -134,9 +141,52 @@ class _RegistroScreen2State extends State<RegistroScreen2> {
                         categoria: _categoria,
                       );
 
-                      // Imprime los datos almacenados
-                      print('Datos almacenados:');
-                      print('Usuario: ${usuario}');
+                      try {
+                        // Llama al método createUser del repositorio
+                        await _userRepository.createUser(usuario.toUserModel());
+                        // Muestra un diálogo de éxito si el resultado es bueno
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Correo enviado'),
+                            content: const Text('Se ha enviado un correo con el código de verificación.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context); // Cierra el diálogo
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => VerificationCodeScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } catch (e) {
+                        showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('Ops! Algo salió mal'),
+                            content: Text(e.toString().replaceAll('Exception:', '')),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } finally {
+                        setState(() {
+                          _loading = false; // Se establece el estado de carga de nuevo a falso
+                        });
+                      }
                     }
                   : null,
               style: ElevatedButton.styleFrom(
@@ -144,10 +194,18 @@ class _RegistroScreen2State extends State<RegistroScreen2> {
                 backgroundColor: const Color(0xFF096BFF),
                 minimumSize: const Size(200, 50),
               ),
-              child: const Text(
-                'CONTINUE',
-                style: TextStyle(fontSize: 18),
-              ),
+              child: _loading // Si está cargando, muestra un CircularProgressIndicador, de lo contrario, muestra el texto 'CONTINUE'
+                  ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'CONTINUE',
+                      style: TextStyle(fontSize: 18),
+                    ),
             ),
             if (!_locationPermissionGranted)
               TextButton(

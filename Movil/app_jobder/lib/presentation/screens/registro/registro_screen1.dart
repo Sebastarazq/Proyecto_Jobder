@@ -1,5 +1,6 @@
-import 'package:app_jobder/presentation/screens/registro/registro_screen2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Importa este paquete para utilizar el TextInputFormatter
+import 'package:app_jobder/presentation/screens/registro/registro_screen2.dart';
 import 'package:go_router/go_router.dart';
 
 class RegistroScreen1 extends StatefulWidget {
@@ -87,6 +88,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
                     }
                     return null;
                   },
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly], // Asegura que solo se acepten números
                 ),
                 _buildTextField(
                   label: 'Contraseña',
@@ -168,6 +170,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
     required void Function(String) onChanged,
     required String? Function(String?) validator,
     bool obscureText = false,
+    List<TextInputFormatter>? inputFormatters, // Agrega un parámetro para los formateadores de entrada
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,6 +187,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
           onChanged: onChanged,
           validator: validator,
           obscureText: obscureText,
+          inputFormatters: inputFormatters, // Asigna los formateadores de entrada
           decoration: InputDecoration(
             hintText: hintText,
             labelText: label,

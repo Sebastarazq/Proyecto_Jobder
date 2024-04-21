@@ -33,6 +33,8 @@ const registerUser = async (req, res) => {
   try {
     const { nombre, email, celular, password, edad, genero, categoria, descripcion, latitud, longitud } = req.body;
 
+    console.log(req.body);
+
     if (!nombre || !email || !celular || !password || !edad || !genero || !categoria) {
       return res.status(400).json({ message: 'Todos los campos son obligatorios' });
     }
@@ -85,10 +87,12 @@ const confirmUser = async (req, res) => {
       const confirmedUser = await userService.confirmUser(token);
   
       if (!confirmedUser) {
-        return res.status(404).json({ message: 'Usuario no encontrado o token inválido' });
+        return res.status(404).json({ message: 'Usuario no encontrado o token inválido'});
       }
+
+      let devolverId = confirmedUser.usuario_id;
   
-      res.status(200).json({ message: 'Usuario confirmado exitosamente' });
+      res.status(200).json({ message: 'Usuario confirmado exitosamente', devolverId});
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Error al confirmar usuario' });

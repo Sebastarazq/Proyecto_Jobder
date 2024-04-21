@@ -1,3 +1,5 @@
+import 'package:app_jobder/infraestructure/model/user_model.dart';
+
 class UsuarioCreacion {
   String nombre;
   String email;
@@ -24,4 +26,21 @@ class UsuarioCreacion {
     this.latitud,
     this.longitud,
   });
+
+  // Método para convertir UsuarioCreacion a UserModel
+  UserModel toUserModel() {
+    return UserModel(
+      nombre: nombre,
+      email: email,
+      celular: celular,
+      password: password,
+      edad: edad,
+      genero: genero,
+      fotoPerfil: foto_perfil,
+      categoria: categoria,
+      descripcion: descripcion,
+      latitud: latitud,
+      longitud: longitud,
+    );
+  }
 }

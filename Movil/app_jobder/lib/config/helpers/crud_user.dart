@@ -6,15 +6,49 @@ import 'package:shared_preferences/shared_preferences.dart';
 class UserRepository {
   final Dio _dio = Dio();
 
-  Future<void> createUser(UserModel user) async {
+  int? _userId; // Variable para almacenar el usuario_id
+
+  int? get userId => _userId; // Getter para obtener el usuario_id
+  
+  Future<void> enviarCodigo(String token) async {
     try {
       final response = await _dio.post(
-        'http://localhost:3000/api/v1/users/register',
-        data: user.toJson(),
+        'http://localhost:3000/api/v1/users/confirm/$token',
       );
 
       // Verificar si la respuesta es exitosa
       if (response.statusCode == 200) {
+        // Mostrar el mensaje recibido del servidor
+        final String message = response.data['message'];
+        _userId = response.data['devolverId'];
+
+        // Realiza las acciones necesarias con los datos obtenidos
+      } else {
+        // Si la respuesta no es exitosa, lanzar una excepción con el mensaje del servidor
+        throw Exception('Error en la solicitud: ${response.data['message']}');
+      }
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 400) {
+        throw Exception('Código de confirmación no válido');
+      } else if (error.response?.statusCode == 404) {
+        throw Exception('Usuario no encontrado o token inválido');
+      } else {
+        throw Exception('Error al confirmar usuario: ${error.message}');
+      }
+    } catch (error) {
+      throw Exception('Error al confirmar usuario: $error');
+    }
+  }
+
+  Future<void> createUser(UserModel user) async {
+    try {
+      final response = await _dio.post(
+        'http://192.168.1.5:3000/api/v1/users/register',
+        data: user.toJson(),
+      );
+
+      // Verificar si la respuesta es exitosa
+      if (response.statusCode == 201) {
         // Mostrar el mensaje recibido del servidor
         final String message = response.data['message'];
       } else {
@@ -34,6 +68,8 @@ class UserRepository {
     }
   }
 
+  
+
   Future<void> loginUser(UsuarioLogin user) async {
     try {
       final response = await _dio.post(
@@ -50,7 +86,7 @@ class UserRepository {
 
       // Almacenar el token y la fecha de expiración en SharedPreferences
       await _saveToken(token, formattedExpirationDate);
-    } on DioError catch (error) {
+    } on DioException catch (error) {
       if (error.response?.statusCode == 400) {
         throw Exception('Correo electrónico/celular y contraseña son obligatorios');
       } else if (error.response?.statusCode == 401) {
