@@ -54,6 +54,18 @@ const createUser = async (nombre, email, celular, password, edad, genero, catego
   }
 };
 
+const obtenerInfoUsuario = async (usuarioId) => {
+  try {
+      const userInfo = await Usuario.findByPk(usuarioId);
+      if (!userInfo) {
+          throw new Error('Usuario no encontrado');
+      }
+      return userInfo;
+  } catch (error) {
+      throw error;
+  }
+};
+
 const confirmUser = async (token) => {
   try {
     // Buscar usuario por token
@@ -215,6 +227,7 @@ const updatePassword = async (userId, newPassword) => {
 export default {
   getAllUsers,
   getUserById,
+  obtenerInfoUsuario,
   createUser,
   confirmUser,
   loginByEmail,

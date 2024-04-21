@@ -1,6 +1,6 @@
 import validator from 'validator';
 import userService from '../services/userService.js';
-import { generaCodigo,generarJWT } from '../helpers/tokens.js';
+import { generaCodigo,generarJWT,decodificarJWT } from '../helpers/tokens.js';
 import {emailRegistro, recuperacionPassword} from '../helpers/email.js';
 import { hashPassword } from '../helpers/hash.js';
 
@@ -28,6 +28,36 @@ const getUserById = async (req, res) => {
       res.status(500).json({ message: 'Error al obtener usuario por ID' });
     }
   };
+  // Controlador para obtener la información de un usuario por su token
+  const obtenerInfoUsuarioPorToken = async (req, res) => {
+    try {
+        const token = req.body.token; // Obtener el token del cuerpo de la solicitud
+        console.log('token:', token);
+        
+        if (!token) {
+            return res.status(400).json({ message: 'Token no proporcionado' });
+        }
+        
+        let decodedToken;
+        try {
+            decodedToken = decodificarJWT(token); // Decodificar el token
+        } catch (error) {
+            return res.status(401).json({ message: 'Token inválido' });
+        }
+        
+        console.log('decoded:', decodedToken);
+        
+        const usuarioId = decodedToken.id; // Obtener el ID del usuario del token decodificado
+        console.log('usuarioId:', usuarioId);
+        
+        const userInfo = await userService.obtenerInfoUsuario(usuarioId);
+        
+        res.status(200).json(userInfo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener la información del usuario' });
+    }
+};
 
 const registerUser = async (req, res) => {
   try {
@@ -268,6 +298,7 @@ const resetPassword = async (req, res) => {
 export default {
   getAllUsers,
   getUserById,
+  obtenerInfoUsuarioPorToken,
   registerUser,
   confirmUser,
   login,

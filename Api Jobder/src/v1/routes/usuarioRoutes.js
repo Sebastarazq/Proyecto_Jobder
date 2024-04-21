@@ -310,6 +310,9 @@ router.post('/forgot-password', userController.sendPasswordResetCode); // Ruta p
 // Ruta para restablecer la contraseña utilizando el código de recuperación
 router.post('/password/reset/confirm/:token', userController.resetPassword);
 
+// Ruta para obtener la información del usuario por token
+router.post('/infouser/token', userController.obtenerInfoUsuarioPorToken);
+
 
 
 
