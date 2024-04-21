@@ -191,16 +191,22 @@ class UserCard extends StatelessWidget {
             bottom: 20.0,
             left: 80.0,
             child: FloatingActionButton(
+              heroTag: null,
               onPressed: onSwipeLeft,
               child: const Icon(Icons.close),
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              /* shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+                side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+              ), */
             ),
           ),
           Positioned(
             bottom: 20.0,
             right: 80.0,
             child: FloatingActionButton(
+              heroTag: null,
               onPressed: onSwipeRight,
               child: const Icon(Icons.check),
               backgroundColor: Colors.green,
