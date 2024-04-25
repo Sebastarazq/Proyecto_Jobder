@@ -6,10 +6,64 @@ import usuarioHabilidadController from '../../controllers/usuarioHabilidadContro
 const router = express.Router();
 
 // Ruta para asociar habilidades a un usuario
+/**
+ * @swagger
+ * /usuario-habilidad/asociar:
+ *   post:
+ *     summary: Asociar habilidades a un usuario.
+ *     description: Asocia las habilidades proporcionadas al usuario autenticado mediante el token.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *               habilidades:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       '201':
+ *         description: Habilidades asociadas correctamente al usuario.
+ *       '400':
+ *         description: Token no proporcionado.
+ *       '401':
+ *         description: Token inválido.
+ *       '500':
+ *         description: Error al asociar habilidades al usuario.
+ */
 router.post('/asociar', usuarioHabilidadController.asociarHabilidadesUsuario);
 
 // Nueva ruta para asociar habilidades a un usuario con usuario_id
-router.post('/asociar2', usuarioHabilidadController.asociarHabilidadesUsuario2);
+/**
+ * @swagger
+ * /usuario-habilidad/asociar2:
+ *   post:
+ *     summary: Asociar habilidades a un usuario con usuario_id.
+ *     description: Asocia las habilidades proporcionadas al usuario especificado por usuario_id.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               usuario_id:
+ *                 type: string
+ *               habilidades:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       '201':
+ *         description: Habilidades asociadas correctamente al usuario.
+ *       '500':
+ *         description: Error al asociar habilidades al usuario.
+ */
+router.post('/asociar2', usuarioHabilidadController.asociarHabilidadesUsuario2); // Ruta para asociar habilidades a un usuario por usuario_id
 
 // Exporta el router
 export default router;

@@ -78,7 +78,40 @@ const recuperacionPassword = async ({ email, nombre, resetCode }) => {
     }
 };
 
+const notificarCambioContraseña = async ({ email, nombre }) => {
+    const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
+
+    try {
+        await transporter.sendMail({
+            from: 'Jobder <noreply@jobder.com>',
+            to: email,
+            subject: 'Cambio de contraseña en Jobder',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #007bff;">¡Hola ${nombre}!</h2>
+                    <p style="font-size: 16px;">Queremos informarte que la contraseña de tu cuenta en Jobder ha sido actualizada correctamente.</p>
+                    <p style="font-size: 16px;">Si no has realizado este cambio, por favor ponte en contacto con nuestro equipo de soporte.</p>
+                    <p style="font-size: 16px; color: #888;">¡Gracias por confiar en Jobder!</p>
+                </div>
+            `,
+        });
+
+        console.log(`Correo de notificación de cambio de contraseña enviado a ${email} para ${nombre}`);
+    } catch (error) {
+        console.error('Error al enviar el correo de notificación de cambio de contraseña:', error);
+        throw error;
+    }
+};
+
 export {
     emailRegistro,
-    recuperacionPassword
+    recuperacionPassword,
+    notificarCambioContraseña
 };

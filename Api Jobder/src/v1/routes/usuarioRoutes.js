@@ -310,8 +310,33 @@ router.post('/forgot-password', userController.sendPasswordResetCode); // Ruta p
 // Ruta para restablecer la contraseña utilizando el código de recuperación
 router.post('/password/reset/confirm/:token', userController.resetPassword);
 
-// Ruta para obtener la información del usuario por token
-router.post('/infouser/token', userController.obtenerInfoUsuarioPorToken);
+/**
+ * @swagger
+ * /infouser/token:
+ *   post:
+ *     summary: Obtener la información del usuario por token.
+ *     description: Obtiene la información del usuario utilizando el token proporcionado.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Token de autenticación del usuario.
+ *     responses:
+ *       '200':
+ *         description: Información del usuario obtenida correctamente.
+ *       '400':
+ *         description: Token no proporcionado.
+ *       '401':
+ *         description: Token inválido.
+ *       '500':
+ *         description: Error interno del servidor.
+ */
+router.post('/infouser/token', userController.obtenerInfoUsuarioPorToken);// Ruta para obtener la información del usuario por token
 
 
 

@@ -34,22 +34,38 @@ const asociarHabilidadesUsuario = async (req, res) => {
     }
 };
 
-    const asociarHabilidadesUsuario2 = async (req, res) => {
-        try {
-            const usuarioId = req.body.usuario_id; // Obtener el ID del usuario del cuerpo de la solicitud
-            console.log('usuarioId:', usuarioId);
+const asociarHabilidadesUsuario2 = async (req, res) => {
+    try {
+        // Obtener el ID del usuario del cuerpo de la solicitud
+        const usuarioId = req.body.usuario_id;
+        console.log('usuarioId:', usuarioId);
 
-            const { habilidades } = req.body;
-            console.log('habilidades:', habilidades);
-
-            await usuarioHabilidadService.asociarHabilidadesUsuario(usuarioId, habilidades);
-            
-            res.status(201).json({ message: 'Habilidades asociadas correctamente al usuario' });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ message: 'Error al asociar habilidades al usuario' });
+        // Verificar si usuarioId está vacío
+        if (!usuarioId) {
+            return res.status(400).json({ message: 'El ID de usuario no puede estar vacío' });
         }
-    };
+
+        // Obtener habilidades del cuerpo de la solicitud
+        const { habilidades } = req.body;
+        console.log('habilidades:', habilidades);
+
+        // Verificar si habilidades está vacío o no es un array
+        if (!habilidades || !Array.isArray(habilidades) || habilidades.length === 0) {
+            return res.status(400).json({ message: 'Las habilidades deben ser un array no vacío' });
+        }
+
+        // Procesar la solicitud para asociar habilidades al usuario
+        await usuarioHabilidadService.asociarHabilidadesUsuario(usuarioId, habilidades);
+        
+        // Responder con éxito
+        res.status(201).json({ message: 'Habilidades asociadas correctamente al usuario' });
+    } catch (error) {
+        console.error(error);
+        // Manejar errores internos del servidor
+        res.status(500).json({ message: 'Error al asociar habilidades al usuario' });
+    }
+};
+
 
 
 export default {

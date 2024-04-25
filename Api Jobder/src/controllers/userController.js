@@ -1,7 +1,7 @@
 import validator from 'validator';
 import userService from '../services/userService.js';
 import { generaCodigo,generarJWT,decodificarJWT } from '../helpers/tokens.js';
-import {emailRegistro, recuperacionPassword} from '../helpers/email.js';
+import {emailRegistro, recuperacionPassword, notificarCambioContraseña} from '../helpers/email.js';
 import { hashPassword } from '../helpers/hash.js';
 
 const getAllUsers = async (req, res) => {
@@ -260,33 +260,37 @@ const confirmUser = async (req, res) => {
     }
   };
 
-const resetPassword = async (req, res) => {
-  try {
-      const { token } = req.params; // Obtiene el token de la URL
-      const { newPassword } = req.body; // Obtiene la nueva contraseña del cuerpo de la solicitud
+  const resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params; // Obtiene el token de la URL
+        const { newPassword } = req.body; // Obtiene la nueva contraseña del cuerpo de la solicitud
 
-      // Verifica que se haya proporcionado una nueva contraseña
-      if (!newPassword) {
-          return res.status(400).json({ message: 'La nueva contraseña es obligatoria' });
-      }
+        // Verifica que se haya proporcionado una nueva contraseña
+        if (!newPassword) {
+            return res.status(400).json({ message: 'La nueva contraseña es obligatoria' });
+        }
 
-      // Verifica si el token es válido y obtiene el ID de usuario asociado
-      const userId = await userService.verifyResetCodeAndGetUserId(token);
+        // Verifica si el token es válido y obtiene el ID de usuario asociado
+        const userId = await userService.verifyResetCodeAndGetUserId(token);
 
-      // Si no se encuentra ningún usuario con el token proporcionado
-      if (!userId) {
-          return res.status(404).json({ message: 'Token inválido o expirado' });
-      }
+        // Si no se encuentra ningún usuario con el token proporcionado
+        if (!userId) {
+            return res.status(404).json({ message: 'Token inválido o expirado' });
+        }
 
-      // Actualiza la contraseña del usuario en la base de datos
-      await userService.updatePassword(userId, newPassword);
+        // Actualiza la contraseña del usuario en la base de datos
+        await userService.updatePassword(userId, newPassword);
 
-      // Envía una respuesta exitosa
-      res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
-  } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error al restablecer la contraseña' });
-  }
+        // Notificar al usuario sobre el cambio de contraseña
+        const user = await userService.getUserById(userId);
+        await notificarCambioContraseña({ email: user.email, nombre: user.nombre });
+
+        // Envía una respuesta exitosa
+        res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al restablecer la contraseña' });
+    }
 };
 
 

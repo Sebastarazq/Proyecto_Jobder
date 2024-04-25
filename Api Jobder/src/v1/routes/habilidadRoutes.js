@@ -4,6 +4,18 @@ import habilidadController from "../../controllers/habilidadController.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /habilidades/all:
+ *   get:
+ *     summary: Obtener todas las habilidades.
+ *     description: Obtiene la lista de todas las habilidades disponibles.
+ *     responses:
+ *       '200':
+ *         description: Habilidades obtenidas correctamente.
+ *       '500':
+ *         description: Error interno del servidor.
+ */
 router.get('/all', habilidadController.getAllHabilidades); // Ruta para obtener todas las habilidades
 
 
