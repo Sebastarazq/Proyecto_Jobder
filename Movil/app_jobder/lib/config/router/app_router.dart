@@ -29,5 +29,10 @@ final appRouter = GoRouter(
       name: UbicacionScreen.name,
       builder: (context, state) => const UbicacionScreen(),
     ),
+    GoRoute(
+      path: '/profile',
+      name: ProfileScreen.name,
+      builder: (context, state) => const ProfileScreen(),
+    ),
   ],
 );

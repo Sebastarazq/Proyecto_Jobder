@@ -19,21 +19,21 @@ class _UsersScreenState extends State<UsersScreen> {
   final List<UserData> _users = [
     UserData(
       name: 'John Doe',
-      imageUrl: 'https://picsum.photos/200/300',
+      imageUrl: 'https://th.bing.com/th/id/R.c53ed9d487187c23fa89f127a8b583fd?rik=a6WJflWBtWw93w&pid=ImgRaw&r=0',
       age: 30,
       bio: 'Adventurer, dog lover, foodie',
       sharedInterests: ['Travel', 'Hiking', 'Cooking'],
     ),
     UserData(
       name: 'Alice Smith',
-      imageUrl: 'https://picsum.photos/200/300',
+      imageUrl: 'https://th.bing.com/th/id/OIP.DqQp2MTPz9G8kcWeHoAj8gAAAA?rs=1&pid=ImgDetMain',
       age: 25,
       bio: 'Nature enthusiast, bookworm',
       sharedInterests: ['Reading', 'Photography', 'Running'],
     ),
     UserData(
       name: 'Bob Johnson',
-      imageUrl: 'https://picsum.photos/200/300',
+      imageUrl: 'https://th.bing.com/th/id/OIP.0cCGP06FFN7nD2t7LE2pRAHaHp?rs=1&pid=ImgDetMain',
       age: 35,
       bio: 'Tech geek, gamer',
       sharedInterests: ['Technology', 'Gaming', 'Movies'],

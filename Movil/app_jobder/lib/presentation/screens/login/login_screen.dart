@@ -1,5 +1,6 @@
 import 'package:app_jobder/config/helpers/crud_user.dart';
 import 'package:app_jobder/infraestructure/model/user_model.dart';
+import 'package:app_jobder/presentation/screens/login/recuperarcuenta_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.close), 
+          icon: const Icon(Icons.close),
           onPressed: () {
             GoRouter.of(context).go('/');
           },
@@ -57,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               onChanged: (value) {
                 setState(() {
-                  _password = value; 
+                  _password = value;
                 });
               },
               obscureText: true,
@@ -75,9 +76,17 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: Text(_isUsingEmail ? 'Iniciar sesión con celular' : 'Iniciar sesión con email'),
             ),
-            const Spacer(), 
+            TextButton(
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const RecuperarCuentaScreen()));
+              },
+              child: const Text(
+                '¿Has olvidado tu contraseña?',
+              ),
+            ),
+            const Spacer(),
             SizedBox(
-              width: double.infinity, 
+              width: double.infinity,
               child: ElevatedButton(
                 onPressed: () async {
                   try {
@@ -88,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       celular: _isUsingEmail ? null : int.tryParse(_emailOrCellphone), // Usar celular solo si se está utilizando el celular
                       password: _password,
                     );
-                    await userRepository.loginUser(user); 
+                    await userRepository.loginUser(user);
                     GoRouter.of(context).go('/home');
                   } catch (error) {
                     String errorMessage = 'Error al iniciar sesión';
@@ -98,12 +107,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     showDialog(
                       context: context,
                       builder: (_) => AlertDialog(
-                        title: Text('Ops! Algo salió mal'),
+                        title: const Text('Ops! Algo salió mal'),
                         content: Text(errorMessage.replaceAll('Exception:', '')),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: Text('OK'),
+                            child: const Text('OK'),
                           ),
                         ],
                       ),
@@ -111,7 +120,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: Colors.white, backgroundColor: const Color(0xFF096BFF), 
+                  foregroundColor: Colors.white,
+                  backgroundColor: const Color(0xFF096BFF),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.symmetric(vertical: 15.0),

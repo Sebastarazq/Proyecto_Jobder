@@ -101,6 +101,66 @@ class UserRepository {
     }
   }
 
+  Future<void> sendPasswordResetCode(String email) async {
+    try {
+      final response = await _dio.post(
+        'http://192.168.1.5:3000/api/v1/users/forgot-password',
+        data: {'email': email},
+      );
+
+      // Verificar si la respuesta es exitosa
+      if (response.statusCode == 200) {
+        // Mostrar mensaje de éxito
+        print('Código de recuperación de contraseña enviado con éxito');
+      } else {
+        // Si la respuesta no es exitosa, lanzar una excepción con el mensaje del servidor
+        throw Exception('Error en la solicitud: ${response.data['message']}');
+      }
+    } on DioException catch (error) {
+      // Manejar errores de Dio
+      if (error.response?.statusCode == 400) {
+        throw Exception('Bad Request: ${error.response?.data['message']}');
+      } else if (error.response?.statusCode == 404) {
+        throw Exception('Usuario no encontrado');
+      } else {
+        throw Exception('Error al enviar código de recuperación de contraseña: ${error.message}');
+      }
+    } catch (error) {
+      // Manejar otros errores
+      throw Exception('Error al enviar código de recuperación de contraseña: $error');
+    }
+  }
+
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      final response = await _dio.post(
+        'http://192.168.1.5:3000/api/v1/users/password/reset/confirm/$token',
+        data: {'newPassword': newPassword},
+      );
+
+      // Verificar si la respuesta es exitosa
+      if (response.statusCode == 200) {
+        // Mostrar mensaje de éxito
+        print('Contraseña restablecida exitosamente');
+      } else {
+        // Si la respuesta no es exitosa, lanzar una excepción con el mensaje del servidor
+        throw Exception('Error en la solicitud: ${response.data['message']}');
+      }
+    } on DioException catch (error) {
+      // Manejar errores de Dio
+      if (error.response?.statusCode == 400) {
+        throw Exception('Bad Request: ${error.response?.data['message']}');
+      } else if (error.response?.statusCode == 404) {
+        throw Exception('Token inválido o expirado');
+      } else {
+        throw Exception('Error al restablecer la contraseña: ${error.message}');
+      }
+    } catch (error) {
+      // Manejar otros errores
+      throw Exception('Error al restablecer la contraseña: $error');
+    }
+  }
+
   // Las funciones getUser, updateUser y deleteUser se pueden agregar según sea necesario
 
   Future<void> _saveToken(String token, String expirationDate) async {
