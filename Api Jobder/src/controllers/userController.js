@@ -152,10 +152,11 @@ const confirmUser = async (req, res) => {
         id: user.usuario_id,
         nombre: user.nombre
       };
+      const usuario_id = user.usuario_id;
       
       // Genera el token utilizando los datos ajustados
       const token = generarJWT(datosParaToken);
-      res.status(200).json({ token });
+      res.status(200).json({ token,usuario_id });
     } catch (error) {
       console.error(error);
       if (error.message === 'La cuenta no existe') {
