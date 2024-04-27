@@ -124,7 +124,7 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) {
         return CustomTransitionPage<void>(
           key: state.pageKey,
-          child: ProfileScreen(),
+          child: const ProfileScreen(),
           transitionDuration: const Duration(milliseconds: 300),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(

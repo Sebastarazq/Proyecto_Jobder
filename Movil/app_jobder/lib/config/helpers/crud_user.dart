@@ -74,7 +74,7 @@ class UserRepository {
       final String token = response.data['token'];
 
       // Extraer el id del usuario del servidor
-      final String usuarioId = response.data['usuario_id'];
+      final int usuarioId = response.data['usuario_id'];
       
 
       // Expiración del token 7 días
@@ -171,8 +171,9 @@ class UserRepository {
 
     Future<UserModel> getUserById(String userId) async {
       try {
+        final usuarioId = int.parse(userId);
         final response = await _dio.get(
-          'http://192.168.1.5:3000/api/v1/users/$userId', // Endpoint para obtener usuario por ID
+          'http://192.168.1.5:3000/api/v1/users/$usuarioId', // Endpoint para obtener usuario por ID
         );
 
         // Verificar si la respuesta es exitosa
@@ -204,8 +205,8 @@ class UserRepository {
     await prefs.setString('auth_token', token);
     await prefs.setString('token_expiration', expirationDate);
   }
-  Future<void> _saveid(String usuarioId) async {
+  Future<void> _saveid(int usuarioId) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('usuario_id', usuarioId);
+    await prefs.setString('usuario_id', usuarioId.toString());
   }
 }

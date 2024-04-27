@@ -49,17 +49,17 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      nombre: json['nombre'],
-      email: json['email'],
-      celular: json['celular'],
-      password: json['password'],
-      edad: json['edad'],
-      genero: json['genero'],
-      fotoPerfil: json['foto_perfil'],
-      categoria: json['categoria'],
-      descripcion: json['descripcion'],
-      latitud: json['latitud'],
-      longitud: json['longitud'],
+      nombre: json['nombre'] ?? '',
+      email: json['email'] ?? '',
+      celular: json['celular'] ?? 0,
+      password: json['password'] ?? '',
+      edad: json['edad'] ?? 0,
+      genero: json['genero'] ?? '',
+      fotoPerfil: json['foto_perfil'] ?? '',
+      categoria: json['categoria'] ?? '',
+      descripcion: json['descripcion'] ?? 'Sin descripción',
+      latitud: json['latitud'] != null ? double.tryParse(json['latitud']) : null,
+    longitud: json['longitud'] != null ? double.tryParse(json['longitud']) : null,
     );
   }
 
