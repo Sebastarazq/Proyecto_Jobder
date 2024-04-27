@@ -55,16 +55,16 @@ class CustomBottomNavigationBar extends StatelessWidget {
   void _navigateToScreen(BuildContext context, int index) {
     switch (index) {
       case 0:
-        GoRouter.of(context).go('/home');
+        context.go('/home');
         break;
       case 1:
         // Navigate to Jobmatch screen
         break;
       case 2:
-        GoRouter.of(context).go('/profile');
+       context.go('/profile');
         break;
       case 3:
-        GoRouter.of(context).go('/ubicacion');
+        context.go('/ubicacion');
         break;
       default:
         break;

@@ -2,6 +2,8 @@ import 'package:app_jobder/presentation/screens/home/perfil/edit_profile_screen.
 import 'package:app_jobder/presentation/screens/shared/widgets/navigation_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatelessWidget {
   static const String name = 'profile_screen';
@@ -12,15 +14,12 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: RichText(
-          // Usamos RichText para aplicar estilos diferentes al texto
           text: const TextSpan(
-            // Definimos el texto y su estilo
             text: 'Perfil Jobder',
             style: TextStyle(
-              fontSize: 22, // Tamaño de la fuente
-              color: Colors.white, // Color del texto
+              fontSize: 22,
+              color: Colors.white,
             ),
-            // Definimos la parte resaltada del texto y su estilo
           ),
         ),
         backgroundColor: const Color(0xFF096BFF),
@@ -66,7 +65,27 @@ class ProfileScreen extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('Editar perfil'),
-                  
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    // Borra el token de autenticación de las preferencias compartidas
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    prefs.remove('auth_token');
+                    // Navega de regreso a la pantalla de inicio de sesión
+                    context.go('/');
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.all(15),
+                    side: const BorderSide(color: Colors.red), // Bordes rojos
+                  ),
+                  child: const Text(
+                    'Cerrar sesión',
+                    style: TextStyle(color: Colors.red), // Texto rojo
+                  ),
                 ),
               ),
             ],

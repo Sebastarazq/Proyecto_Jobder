@@ -73,12 +73,20 @@ class UserRepository {
       // Extraer el token del servidor
       final String token = response.data['token'];
 
+      // Extraer el id del usuario del servidor
+      final String usuarioId = response.data['usuario_id'];
+      
+
       // Expiración del token 7 días
       final DateTime expirationDate = DateTime.now().add(const Duration(days: 7));
       final String formattedExpirationDate = DateFormat('yyyy-MM-dd').format(expirationDate);
 
       // Almacenar el token y la fecha de expiración en SharedPreferences
       await _saveToken(token, formattedExpirationDate);
+
+      // Almacenar el id del usuario en SharedPreferences
+      await _saveid(usuarioId);
+
     } on DioException catch (error) {
       if (error.response?.statusCode == 400) {
         throw Exception('Correo electrónico/celular y contraseña son obligatorios');
@@ -161,11 +169,43 @@ class UserRepository {
     }
   }
 
+    Future<UserModel> getUserById(String userId) async {
+      try {
+        final response = await _dio.get(
+          'http://192.168.1.5:3000/api/v1/users/$userId', // Endpoint para obtener usuario por ID
+        );
+
+        // Verificar si la respuesta es exitosa
+        if (response.statusCode == 200) {
+          // Parsear el JSON de la respuesta a un objeto UserModel
+          final user = UserModel.fromJson(response.data);
+          return user;
+        } else {
+          // Si la respuesta no es exitosa, lanzar una excepción con el mensaje del servidor
+          throw Exception('Error en la solicitud: ${response.data['message']}');
+        }
+      } on DioException catch (error) {
+        // Manejar errores de Dio
+        if (error.response?.statusCode == 404) {
+          throw Exception('Usuario no encontrado');
+        } else {
+          throw Exception('Error al obtener usuario por ID: ${error.message}');
+        }
+      } catch (error) {
+        // Manejar otros errores
+        throw Exception('Error al obtener usuario por ID: $error');
+      }
+    }
+
   // Las funciones getUser, updateUser y deleteUser se pueden agregar según sea necesario
 
   Future<void> _saveToken(String token, String expirationDate) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
     await prefs.setString('token_expiration', expirationDate);
+  }
+  Future<void> _saveid(String usuarioId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('usuario_id', usuarioId);
   }
 }
