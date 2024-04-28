@@ -223,6 +223,30 @@ const updatePassword = async (userId, newPassword) => {
   }
 };
 
+const updateProfileImage = async (userId, imageUrl) => {
+  try {
+    // Busca el usuario por su ID
+    const user = await Usuario.findByPk(userId);
+    if (!user) {
+      throw new Error('Usuario no encontrado');
+    }
+
+    // Actualiza la URL de la imagen de perfil del usuario
+    user.foto_perfil = imageUrl;
+
+    console.log('user:', user);
+
+    // Guarda los cambios en la base de datos
+    await user.save();
+
+    // Retorna el usuario actualizado
+    return user;
+  } catch (error) {
+    throw error;
+  }
+};
+
+
 
 export default {
   getAllUsers,
@@ -236,5 +260,6 @@ export default {
   getUserByEmail,
   savePasswordResetCode,
   verifyResetCodeAndGetUserId,
-  updatePassword
+  updatePassword,
+  updateProfileImage
 };

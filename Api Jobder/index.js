@@ -10,6 +10,9 @@ const app = express();
 // Puerto
 const PORT = process.env.PORT || 3000;
 
+// Carpeta publica
+app.use(express.static('public'))
+
 // json middleware
 app.use(express.json());
 

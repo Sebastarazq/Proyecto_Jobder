@@ -2,6 +2,7 @@ import 'package:app_jobder/infraestructure/model/user_model.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 
 class UserRepository {
   final Dio _dio = Dio();
@@ -198,7 +199,40 @@ class UserRepository {
       }
     }
 
-  // Las funciones getUser, updateUser y deleteUser se pueden agregar según sea necesario
+    Future<void> uploadProfileImage(String userId, File imageFile) async {
+    try {
+      // Crea un FormData para adjuntar el archivo de imagen
+      FormData formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: 'profile_image.jpg',
+        ),
+      });
+
+      // Realiza la solicitud POST al endpoint para subir la imagen
+      final response = await _dio.post(
+        'http://192.168.1.5:3000/api/v1/users/perfilimg/$userId/upload',
+        data: formData,
+        options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      // Verifica si la respuesta es exitosa
+      if (response.statusCode == 200) {
+        print('Imagen de perfil subida exitosamente');
+      } else {
+        // Si la respuesta no es exitosa, lanza una excepción con el mensaje del servidor
+        throw Exception('Error en la solicitud: ${response.data['message']}');
+      }
+    } catch (error) {
+      // Maneja errores durante la solicitud
+      throw Exception('Error al subir la imagen de perfil: $error');
+    }
+  }
+
 
   Future<void> _saveToken(String token, String expirationDate) async {
     final prefs = await SharedPreferences.getInstance();

@@ -1,8 +1,12 @@
+import 'package:app_jobder/infraestructure/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+
+  final UserModel userData;
+  const EditProfileScreen({required this.userData, Key? key}) : super(key: key);
+
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();

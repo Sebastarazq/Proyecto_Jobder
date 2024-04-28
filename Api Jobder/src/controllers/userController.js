@@ -3,6 +3,7 @@ import userService from '../services/userService.js';
 import { generaCodigo,generarJWT,decodificarJWT } from '../helpers/tokens.js';
 import {emailRegistro, recuperacionPassword, notificarCambioContraseña} from '../helpers/email.js';
 import { hashPassword } from '../helpers/hash.js';
+import multer from 'multer';
 
 const getAllUsers = async (req, res) => {
   try {
@@ -295,9 +296,31 @@ const confirmUser = async (req, res) => {
     }
 };
 
+// Controlador para subir la imagen de perfil y guardar el enlace en la base de datos
+const uploadImage = async (req, res) => {
+  try {
+    // Verifica si se cargó una imagen
+    if (!req.file) {
+      return res.status(400).json({ message: 'No se proporcionó ninguna imagen' });
+    }
 
-  
-  
+    console.log(req.file);
+
+    // Guarda la URL de la imagen en la base de datos
+    const imageUrl = `http://192.168.1.5:3000/uploads/${req.file.filename}`;
+
+    // Obtén el ID de usuario de los parámetros de la URL
+    const userId = req.params.id;
+
+    // Llama al servicio para actualizar la URL de la imagen de perfil del usuario en la base de datos
+    await userService.updateProfileImage(userId, imageUrl);
+
+    res.status(200).json({ message: 'Imagen de perfil subida exitosamente' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al subir la imagen de perfil' });
+  }
+};
 
   
 
@@ -310,5 +333,6 @@ export default {
   login,
   updateUserPartialInfo,
   sendPasswordResetCode,
-  resetPassword
+  resetPassword,
+  uploadImage
 };

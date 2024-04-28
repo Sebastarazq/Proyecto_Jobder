@@ -1,5 +1,6 @@
 import express from "express";
 import userController from "../../controllers/userController.js";
+import upload from "../../middleware/multer.js";
 
 const router = express.Router();
 
@@ -337,6 +338,10 @@ router.post('/password/reset/confirm/:token', userController.resetPassword);
  *         description: Error interno del servidor.
  */
 router.post('/infouser/token', userController.obtenerInfoUsuarioPorToken);// Ruta para obtener la información del usuario por token
+
+// Ruta para subir imágenes utilizando Multer
+router.post('/perfilimg/:id/upload', upload.single('image'), userController.uploadImage);
+
 
 
 

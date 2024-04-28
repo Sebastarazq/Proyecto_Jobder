@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'dart:convert';
 
 class LocationService {
   static Future<String> getLocationName(double latitude, double longitude) async {
@@ -11,14 +10,22 @@ class LocationService {
       final dio = Dio();
       final response = await dio.get(url);
 
-      final decodedResponse = json.decode(response.data);
-
-      if (decodedResponse['status'] == 'OK') {
-        return decodedResponse['results'][0]['formatted_address'];
+      // Comprueba si la solicitud fue exitosa
+      if (response.statusCode == 200) {
+        final decodedResponse = response.data;
+        // Verifica si la respuesta tiene la estructura esperada
+        if (decodedResponse['status'] == 'OK') {
+          // Devuelve el nombre de la ubicación
+          return decodedResponse['results'][0]['formatted_address'];
+        } else {
+          return 'No se pudo obtener la ubicación';
+        }
       } else {
-        return 'No se pudo obtener la ubicación';
+        // Si la solicitud no fue exitosa, devuelve un mensaje de error
+        return 'Error en la solicitud: ${response.statusCode}';
       }
     } catch (e) {
+      // Si ocurre un error durante la solicitud, imprime el error y devuelve un mensaje de error
       print('Error al obtener la ubicación: $e');
       return 'Error al obtener la ubicación';
     }
