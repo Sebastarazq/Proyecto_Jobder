@@ -11,6 +11,7 @@ const getUsuariosCercanos = async(req, res) => {
       
       // Llamar al servicio para encontrar usuarios cercanos
       const usuariosCercanos = await matchService.encontrarUsuariosCercanos(usuarioId);
+      console.log('usuariosCercanos:', usuariosCercanos);
       
       // Enviar la respuesta con los usuarios cercanos
       res.status(200).json({ usuariosCercanos });

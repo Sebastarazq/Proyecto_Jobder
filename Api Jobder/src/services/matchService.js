@@ -1,4 +1,4 @@
-import { Usuario, Match } from '../models/index.js';
+import { Usuario, Match, Habilidad } from '../models/index.js';
 import { Op } from 'sequelize';
 
 // Función para encontrar usuarios cercanos basados en la ubicación del usuario actual
@@ -34,6 +34,11 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
                 }
             },
             include: [
+                {
+                    model: Habilidad, // Incluir el modelo de Habilidad
+                    through: { attributes: [] }, // Excluir los atributos adicionales de la tabla de unión
+                    required: true // Asegurar que el usuario tenga al menos una habilidad asociada
+                },
                 {
                     model: Match,
                     as: 'Matches1',
@@ -73,6 +78,7 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
         throw error;
     }
 };
+
 
 export default {
     encontrarUsuariosCercanos
