@@ -26,11 +26,16 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
                 latitud: { [Op.not]: null }, // Asegurarse de que tengan una ubicación válida
                 longitud: { [Op.not]: null },
                 latitud: {
-                    [Op.between]: [usuario.latitud - (distanciaMaxima / 110.574), usuario.latitud + (distanciaMaxima / 110.574)]
+                    [Op.or]: [
+                        { [Op.gte]: usuario.latitud - (distanciaMaxima / 110.574) },
+                        { [Op.eq]: null }
+                    ]
                 },
                 longitud: {
-                    [Op.between]: [usuario.longitud - (distanciaMaxima / (111.32 * Math.cos(usuario.latitud * Math.PI / 180))),
-                        usuario.longitud + (distanciaMaxima / (111.32 * Math.cos(usuario.latitud * Math.PI / 180)))]
+                    [Op.or]: [
+                        { [Op.gte]: usuario.longitud - (distanciaMaxima / (111.32 * Math.cos(usuario.latitud * Math.PI / 180))) },
+                        { [Op.eq]: null }
+                    ]
                 }
             },
             include: [

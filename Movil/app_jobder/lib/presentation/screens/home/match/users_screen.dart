@@ -59,14 +59,13 @@ class _UsersScreenState extends State<UsersScreen> {
   void _getUsuariosCercanos() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? userId = prefs.getString('usuario_id'); // Ahora userId es un String nullable
-      int? userIdInt = int.tryParse(userId ?? ''); // Convertir el ID de usuario de String a int
+      String? userId = prefs.getString('usuario_id');
+      int? userIdInt = int.tryParse(userId ?? '');
       print('User ID: $userIdInt');
       if (userIdInt != null) {
         List<UsuarioCercano> usuariosCercanos = await matchRepository.getUsuariosCercanos(userIdInt);
         print('Usuarios cercanos: $usuariosCercanos');
         setState(() {
-          // Convertir cada UsuarioCercano a UserData y agregarlo a la lista _users
           _users = usuariosCercanos.map((usuario) {
             print('Usuario: ${usuario.nombre}');
             print('Foto de perfil: ${usuario.fotoPerfil}');
@@ -78,76 +77,81 @@ class _UsersScreenState extends State<UsersScreen> {
         print('Error: userId no es un entero válido.');
       }
     } catch (error) {
+      // Captura cualquier excepción ocurrida y muestra un mensaje apropiado
+      setState(() {
+        _users = []; // Vacía la lista de usuarios para evitar el error
+      });
       print('Error al obtener usuarios cercanos: $error');
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final bool isControllerAvailable = mounted;
+Widget build(BuildContext context) {
+  final bool isControllerAvailable = mounted;
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent, // Make app bar transparent
-        elevation: 0, // Remove app bar elevation
-        title: const Row(
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: Colors.transparent, // Make app bar transparent
+      elevation: 0, // Remove app bar elevation
+      title: const Row(
+        children: [
+          Icon(Icons.work), // Icono de trabajo
+          SizedBox(width: 8), // Espacio entre el icono y el título
+          Text('Jobder'), // Título
+        ],
+      ),
+    ),
+    extendBodyBehindAppBar: true, // Extend body behind app bar
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFEE805F), Color(0xFF096BFF)],
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
           children: [
-            Icon(Icons.work), // Icono de trabajo
-            SizedBox(width: 8), // Espacio entre el icono y el título
-            Text('Jobder'), // Título
+            Expanded(
+              child: _users.isNotEmpty
+                ? CardSwiper(
+                    controller: controller,
+                    cardsCount: _users.length,
+                    numberOfCardsDisplayed: 2, // Asegúrate de establecer este valor correctamente
+                    cardBuilder: (context, index, percentX, percentY) {
+                      final user = _users[index];
+                      return UserCard(
+                        user: user,
+                        controller: controller,
+                        onSwipeLeft: () {
+                          if (isControllerAvailable) {
+                            controller.swipe(CardSwiperDirection.left);
+                          }
+                        },
+                        onSwipeRight: () {
+                          if (isControllerAvailable) {
+                            controller.swipe(CardSwiperDirection.right);
+                          }
+                        },
+                        habilidades: _usuarioHabilidades,
+                      );
+                    },
+                  )
+                : Center(
+                    child: Text(
+                      'No hay más usuarios para mostrar',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+            ),
           ],
         ),
       ),
-      extendBodyBehindAppBar: true, // Extend body behind app bar
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFEE805F), Color(0xFF096BFF)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: _users.isNotEmpty
-                    ? CardSwiper(
-                        controller: controller,
-                        cardsCount: _users.length,
-                        cardBuilder: (context, index, percentX, percentY) {
-                          final user = _users[index];
-                          return UserCard(
-                            user: user,
-                            controller: controller,
-                            onSwipeLeft: () {
-                              if (isControllerAvailable) {
-                                controller.swipe(CardSwiperDirection.left);
-                              }
-                            },
-                            onSwipeRight: () {
-                              if (isControllerAvailable) {
-                                controller.swipe(CardSwiperDirection.right);
-                              }
-                            },
-                            habilidades: _usuarioHabilidades, // Pasar la lista de habilidades al UserCard
-                          );
-                        },
-                      )
-                    : const Center(
-                        child: Text(
-                          'No more users to match!',
-                          style: TextStyle(fontSize: 18),
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),
-    );
-  }
+    ),
+    bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),
+  );
+}
 }
 
 class UserCard extends StatelessWidget {
