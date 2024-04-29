@@ -1,3 +1,6 @@
+import 'package:app_jobder/config/helpers/crud_habilidades.dart';
+import 'package:app_jobder/domain/entities/habilidad.dart';
+import 'package:app_jobder/presentation/screens/home/perfil/edit_profile_habilidades.dart';
 import 'package:flutter/material.dart';
 import 'package:app_jobder/config/helpers/crud_user.dart';
 import 'package:app_jobder/config/helpers/location_service.dart';
@@ -19,12 +22,54 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Future<UserModel> userFuture;
+  List<Habilidad>? _allHabilidades; // Lista de todas las habilidades
+  List<Habilidad>? _usuarioHabilidades; // Lista de habilidades del usuario
+
 
   @override
   void initState() {
     super.initState();
     userFuture = getUserData();
+    _fetchAllHabilidades(); // Obtener todas las habilidades
+    _fetchUsuarioHabilidades(); // Obtener las habilidades del usuario
   }
+
+  Future<void> _fetchAllHabilidades() async {
+  try {
+    HabilidadesRepository habilidadesRepository = HabilidadesRepository();
+    List<Habilidad> allHabilidades = await habilidadesRepository.getAllHabilidades();
+    setState(() {
+      _allHabilidades = allHabilidades;
+    });
+  } catch (error) {
+    print('Error al obtener todas las habilidades: $error');
+  }
+}
+
+Future<void> _fetchUsuarioHabilidades() async {
+  try {
+    String userId = await _getUserId();
+    int userIdInt = int.tryParse(userId) ?? 0; // Convertir el ID de usuario de String a int
+    HabilidadesRepository habilidadesRepository = HabilidadesRepository();
+    List<Habilidad> usuarioHabilidades = await habilidadesRepository.getUsuarioHabilidades(userIdInt);
+    setState(() {
+      _usuarioHabilidades = usuarioHabilidades;
+    });
+  } catch (error) {
+    print('Error al obtener las habilidades del usuario: $error');
+  }
+}
+
+String _formatHabilidades(List<Habilidad>? habilidades) {
+  if (habilidades == null || habilidades.isEmpty) {
+    return 'Sin habilidades';
+  }
+  // Obtener los nombres de las habilidades del usuario usando la lista de todas las habilidades
+  return habilidades.map((habilidad) {
+    final habilidadEncontrada = _allHabilidades?.firstWhere((hab) => hab.habilidadId == habilidad.habilidadId, orElse: () => Habilidad(habilidadId: habilidad.habilidadId, nombre: 'Habilidad desconocida'));
+    return habilidadEncontrada?.nombre ?? 'Habilidad desconocida';
+  }).join(', ');
+}
 
   Future<UserModel> getUserData() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -46,11 +91,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Stack(
-              alignment: Alignment.center,
-              children: [
-                CircularProgressIndicator(),
-              ],
+            body: Center(
+              child: CircularProgressIndicator(),
             ),
           );
         } else if (snapshot.hasError) {
@@ -127,9 +169,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     itemProfile('Edad', user.edad.toString(), Icons.calendar_month),
                     const SizedBox(height: 10),
                     itemProfile('Descripción', user.descripcion ?? 'Sin descripción', Icons.book),
+                    const SizedBox(height: 10),
+                    itemProfile('Habilidades', _formatHabilidades(_usuarioHabilidades), Icons.star),
                     const SizedBox(height: 20),
                     FutureBuilder<String>(
-                      future: LocationService.getLocationName(latitudUser, longitudUser),
+                      future: LocationService.getCityName(latitudUser, longitudUser),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return const CircularProgressIndicator();
@@ -146,12 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditProfileScreen(userData: user),
-                            ),
-                          );
+                          _navigateToEditProfile(user);
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.all(15),
@@ -159,6 +198,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('Editar perfil'),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          _navigateToEditHabilidades();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(15),
+                          backgroundColor: const Color(0xFF096BFF),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Editar habilidades'),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -193,27 +247,76 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget itemProfile(String title, String subtitle, IconData iconData) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, 5),
-            color: const Color.fromARGB(255, 133, 180, 219).withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 10,
+    if (title == 'Descripción') {
+      return GestureDetector(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                offset: const Offset(0, 5),
+                color: const Color.fromARGB(255, 133, 180, 219).withOpacity(0.2),
+                spreadRadius: 2,
+                blurRadius: 10,
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(subtitle),
-        leading: Icon(iconData),
-        trailing: Icon(Icons.arrow_forward, color: Colors.grey.shade400),
-        tileColor: Colors.white,
-      ),
-    );
+          child: ListTile(
+            title: Text(title),
+            subtitle: Text(subtitle),
+            leading: Icon(iconData),
+            trailing: Icon(Icons.arrow_forward, color: Colors.grey.shade400),
+            tileColor: Colors.white,
+          ),
+        ),
+      );
+    } else if (title == 'Habilidades') {
+      // Aquí puedes mostrar las habilidades del usuario
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              offset: const Offset(0, 5),
+              color: const Color.fromARGB(255, 133, 180, 219).withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: ListTile(
+          title: Text(title),
+          subtitle: Text(subtitle),
+          leading: Icon(iconData),
+          trailing: Icon(Icons.arrow_forward, color: Colors.grey.shade400),
+          tileColor: Colors.white,
+        ),
+      );
+    } else {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              offset: const Offset(0, 5),
+              color: const Color.fromARGB(255, 133, 180, 219).withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: ListTile(
+          title: Text(title),
+          subtitle: Text(subtitle),
+          leading: Icon(iconData),
+          trailing: Icon(Icons.arrow_forward, color: Colors.grey.shade400),
+          tileColor: Colors.white,
+        ),
+      );
+    }
   }
 
   void _showImagePickerBottomSheet(BuildContext context, String photoUrl) {
@@ -347,5 +450,43 @@ void _pickImageFromCamera() async {
         );
       },
     );
+  }
+  void _navigateToEditProfile(UserModel user) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditProfileScreen(userData: user),
+      ),
+    );
+
+    // Verificar si se actualizaron los datos del perfil
+    if (result == true) {
+      // Recargar los datos del usuario
+      setState(() {
+        userFuture = getUserData();
+      });
+    }
+  }
+  void _navigateToEditHabilidades() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString('usuario_id') ?? '';
+    int userIdInt = int.tryParse(userId) ?? 0; // Convertir el ID de usuario de String a int
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditHabilidadesScreen(userId: userIdInt),
+      ),
+    );
+
+    // Verificar si las habilidades se actualizaron
+    if (result == true) {
+      // Recargar los datos del usuario
+      setState(() {
+        userFuture = getUserData();
+      });
+
+      // Actualizar las habilidades del usuario en la vista del perfil
+      _fetchUsuarioHabilidades();
+    }
   }
 }

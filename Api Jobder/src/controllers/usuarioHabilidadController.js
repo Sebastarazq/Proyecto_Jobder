@@ -66,9 +66,35 @@ const asociarHabilidadesUsuario2 = async (req, res) => {
     }
 };
 
+const getHabilidadesUsuario = async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+        const habilidades = await usuarioHabilidadService.getHabilidadesUsuario(usuarioId);
+        res.status(200).json(habilidades);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener las habilidades del usuario' });
+    }
+};
+
+const actualizarHabilidadesUsuario = async (req, res) => {
+    try {
+        const { usuario_id, habilidades } = req.body;
+        console.log('usuario_id:', usuario_id);
+        console.log('habilidades:', habilidades);
+        await usuarioHabilidadService.actualizarHabilidadesUsuario(usuario_id, habilidades);
+        res.status(200).json({ message: 'Habilidades actualizadas correctamente.' });
+    } catch (error) {
+        console.error('Error al actualizar las habilidades del usuario:', error);
+        res.status(500).json({ message: 'Error interno del servidor.' });
+    }
+};
+
 
 
 export default {
     asociarHabilidadesUsuario,
-    asociarHabilidadesUsuario2
+    asociarHabilidadesUsuario2,
+    getHabilidadesUsuario,
+    actualizarHabilidadesUsuario
 };

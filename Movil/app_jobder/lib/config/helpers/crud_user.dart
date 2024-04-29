@@ -1,3 +1,4 @@
+import 'package:app_jobder/infraestructure/model/user_actualizar.dart';
 import 'package:app_jobder/infraestructure/model/user_model.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
@@ -230,6 +231,36 @@ class UserRepository {
     } catch (error) {
       // Maneja errores durante la solicitud
       throw Exception('Error al subir la imagen de perfil: $error');
+    }
+  }
+
+  // Modificar la función updateUserPartialInfo para aceptar PartialUserUpdate como parámetro
+  Future<void> updateUserPartialInfo(String userId, PartialUserUpdate updates) async {
+    try {
+      final response = await _dio.patch(
+        'http://192.168.1.5:3000/api/v1/users/update/$userId',
+        data: updates.toJson(),
+      );
+
+      // Verifica si la respuesta es exitosa
+      if (response.statusCode == 200) {
+        print('Información de usuario actualizada con éxito');
+      } else {
+        // Si la respuesta no es exitosa, lanza una excepción con el mensaje del servidor
+        throw Exception('Error en la solicitud: ${response.data['message']}');
+      }
+    } on DioException catch (error) {
+      // Maneja errores de Dio
+      if (error.response?.statusCode == 400) {
+        throw Exception('Bad Request: ${error.response?.data['message']}');
+      } else if (error.response?.statusCode == 404) {
+        throw Exception('Usuario no encontrado');
+      } else {
+        throw Exception('Error al actualizar la información del usuario: ${error.message}');
+      }
+    } catch (error) {
+      // Maneja otros errores
+      throw Exception('Error al actualizar la información del usuario: $error');
     }
   }
 

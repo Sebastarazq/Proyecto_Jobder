@@ -65,5 +65,11 @@ router.post('/asociar', usuarioHabilidadController.asociarHabilidadesUsuario);
  */
 router.post('/asociar2', usuarioHabilidadController.asociarHabilidadesUsuario2); // Ruta para asociar habilidades a un usuario por usuario_id
 
+// Ruta para obtener la información de Usuarios Habilidades
+router.get('/:usuarioId', usuarioHabilidadController.getHabilidadesUsuario);
+
+// Ruta para actualizar las habilidades del usuario
+router.post('/actualizar', usuarioHabilidadController.actualizarHabilidadesUsuario);
+
 // Exporta el router
 export default router;

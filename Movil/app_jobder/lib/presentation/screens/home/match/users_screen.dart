@@ -1,7 +1,9 @@
+import 'package:app_jobder/config/helpers/permiso_location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:app_jobder/domain/entities/user_data.dart';
 import 'package:app_jobder/presentation/screens/shared/widgets/navigation_bar.dart';
+import 'package:geolocator/geolocator.dart';
 
 class UsersScreen extends StatefulWidget {
   const UsersScreen({Key? key}) : super(key: key);
@@ -14,6 +16,34 @@ class UsersScreen extends StatefulWidget {
 
 class _UsersScreenState extends State<UsersScreen> {
   final CardSwiperController controller = CardSwiperController();
+
+  final LocationPermissionHelper locationPermissionHelper = LocationPermissionHelper();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndRequestLocationPermission();
+  }
+
+ void _checkAndRequestLocationPermission() async {
+  bool permissionGranted = false;
+  
+  while (!permissionGranted) {
+    permissionGranted = await LocationPermissionHelper.requestLocationPermission(context);
+    
+    if (!permissionGranted) {
+      // En este punto, el permiso de ubicación no fue concedido.
+      // Puedes mostrar un mensaje o tomar cualquier otra acción necesaria.
+      
+      // Verificar si el usuario concedió el permiso después de volver desde la configuración
+      LocationPermission updatedPermission = await Geolocator.checkPermission();
+      if (updatedPermission == LocationPermission.denied) {
+        // El usuario sigue sin conceder el permiso, por lo que no se le permite ir a ningún lado
+        // Aquí puedes mostrar un mensaje adicional o tomar otra acción necesaria
+      }
+    }
+  }
+}
 
   // Datos de usuarios de muestra
   final List<UserData> _users = [
