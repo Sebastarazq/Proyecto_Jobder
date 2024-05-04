@@ -52,6 +52,7 @@ class HabilidadesRepository {
       throw Exception('Error al obtener habilidades del usuario: $error');
     }
   }
+  
 
   // Método para enviar los datos y actualizar las habilidades del usuario
   Future<void> actualizarHabilidadesUsuario(int usuarioId, List<int> nuevasHabilidades) async {

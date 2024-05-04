@@ -1,6 +1,6 @@
 // services/habilidadService.js
 
-import Habilidad from '../models/Habilidad.js';
+import {Habilidad} from '../models/index.js';
 
 const getAllHabilidades = async () => {
   try {

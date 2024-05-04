@@ -28,6 +28,7 @@ class _UsersScreenState extends State<UsersScreen> {
   final MatchRepository matchRepository = MatchRepository(); // Instancia del repositorio de Match
   List<UserData> _users = []; // Lista de usuarios
   List<Habilidad>? _usuarioHabilidades; // Lista de habilidades del usuario
+  int userIdInt = 0; // Actualización: Variable de instancia para almacenar userIdInt, inicializada con un valor predeterminado de 0
 
   @override
   void initState() {
@@ -60,13 +61,15 @@ class _UsersScreenState extends State<UsersScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? userId = prefs.getString('usuario_id');
-      int? userIdInt = int.tryParse(userId ?? '');
+      userIdInt = int.tryParse(userId ?? '') ?? 0; // Asigna userIdInt con un valor predeterminado de 0 si userId es nulo o no se puede convertir a int
       print('User ID: $userIdInt');
-      if (userIdInt != null) {
+      if (userIdInt != 0) { // Verifica que userIdInt no sea igual a 0 antes de llamar a matchRepository.getUsuariosCercanos()
         List<UsuarioCercano> usuariosCercanos = await matchRepository.getUsuariosCercanos(userIdInt);
         print('Usuarios cercanos: $usuariosCercanos');
+        
         setState(() {
           _users = usuariosCercanos.map((usuario) {
+            print('usuario_id: ${usuario.usuarioId}');
             print('Usuario: ${usuario.nombre}');
             print('Foto de perfil: ${usuario.fotoPerfil}');
             print('Descripción: ${usuario.descripcion}');
@@ -123,6 +126,7 @@ Widget build(BuildContext context) {
                       final user = _users[index];
                       return UserCard(
                         user: user,
+                        userIdInt: userIdInt,
                         controller: controller,
                         onSwipeLeft: () {
                           if (isControllerAvailable) {
@@ -156,29 +160,40 @@ Widget build(BuildContext context) {
 
 class UserCard extends StatelessWidget {
   final UserData user;
+  final int userIdInt; // Agregado userIdInt como parámetro
   final VoidCallback? onSwipeLeft;
   final VoidCallback? onSwipeRight;
   final CardSwiperController? controller;
   final List<Habilidad>? habilidades; // Lista de habilidades
 
+
   const UserCard({
     Key? key,
     required this.user,
+    required this.userIdInt, // Agregado userIdInt como parámetro
     this.controller,
     this.onSwipeLeft,
     this.onSwipeRight,
     this.habilidades, // Actualizado
+    
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // Aquí puedes navegar a la pantalla del perfil del usuario
+      onTap: () async {
+        final ubicacion = await LocationService.getCityName(
+          double.parse(user.latitud),
+          double.parse(user.longitud),
+        );
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => UserProfileScreen(user: user),
+            builder: (context) => UserProfileScreen(
+              user: user,
+              usuarioId: int.parse(user.id),
+              ubicacion: ubicacion,
+            ),
           ),
         );
       },
@@ -207,36 +222,8 @@ class UserCard extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                      image: DecorationImage(
-                        image: NetworkImage(user.imageUrl),
-                        fit: BoxFit.cover,
-                      ),
                     ),
-                    child: FutureBuilder<Uint8List>(
-                      future: _loadImage(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done) {
-                          if (snapshot.hasError) {
-                            // En caso de error, cargar la imagen de assets
-                            return Image.asset(
-                              'assets/images/user.jpeg',
-                              fit: BoxFit.cover,
-                            );
-                          } else {
-                            // Si no hay error, mostrar la imagen desde la red
-                            return Image.memory(
-                              snapshot.data!,
-                              fit: BoxFit.cover,
-                            );
-                          }
-                        } else {
-                          // Mientras se está cargando la imagen, mostrar un indicador de progreso
-                          return Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        }
-                      },
-                    ),
+                    child: _buildUserImage(user.imageUrl),
                   ),
                 ),
                 Expanded(
@@ -336,7 +323,7 @@ class UserCard extends StatelessWidget {
                                     return Text('Error: ${snapshot.error}');
                                   } else {
                                     return Text(
-                                      'Ubicación: ${snapshot.data ?? 'No disponible'}',
+                                      'Ciudad: ${snapshot.data ?? 'No disponible'}',
                                       style: const TextStyle(
                                         color: Colors.black87,
                                         fontSize: 16,
@@ -388,7 +375,39 @@ class UserCard extends StatelessWidget {
       return data.buffer.asUint8List();
     } catch (error) {
       print('Error loading asset image: $error');
-      throw error;
+      rethrow; // Lanza la excepción original para ser capturada
+    }
+  }
+
+  Widget _buildUserImage(String imageUrl) {
+    if (imageUrl.toLowerCase().contains('assets')) {
+      // Si la URL contiene la cadena "assets", cargar la imagen desde los activos
+      return FutureBuilder<Uint8List>(
+        future: _loadImage(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              // En caso de error, mostrar un mensaje o un ícono de error
+              return const Icon(Icons.error, color: Colors.red);
+            } else {
+              // Si no hay error, mostrar la imagen desde los bytes cargados
+              return Image.memory(
+                snapshot.data!,
+                fit: BoxFit.cover,
+              );
+            }
+          } else {
+            // Mientras se está cargando la imagen, mostrar un indicador de progreso
+            return const CircularProgressIndicator();
+          }
+        },
+      );
+    } else {
+      // Si la URL no contiene la cadena "assets", cargar la imagen desde la red
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+      );
     }
   }
 

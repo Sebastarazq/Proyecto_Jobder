@@ -1,11 +1,11 @@
-import { Usuario, Match, Habilidad } from '../models/index.js';
+import { Usuario, Match, Habilidad,RedSocial, UsuariosRedesSociales } from '../models/index.js';
+import UsuarioHabilidad from '../models/UsuarioHabilidad.js';
 import { Op } from 'sequelize';
 
-// Función para encontrar usuarios cercanos basados en la ubicación del usuario actual
 const encontrarUsuariosCercanos = async (usuarioId) => {
     try {
         // Verificar si el usuario existe
-        const usuario = await Usuario.findOne({ where: { usuario_id: usuarioId } });
+        const usuario = await Usuario.findByPk(usuarioId);
         if (!usuario) {
             throw new Error('El usuario no existe');
         }
@@ -52,7 +52,7 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
                             { usuario1_id: usuarioId },
                             { usuario2_id: usuarioId }
                         ],
-                        [Op.or]: [
+                        [Op.and]: [
                             { visto1: false },
                             { visto2: false }
                         ]
@@ -67,7 +67,7 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
                             { usuario1_id: usuarioId },
                             { usuario2_id: usuarioId }
                         ],
-                        [Op.or]: [
+                        [Op.and]: [
                             { visto1: false },
                             { visto2: false }
                         ]
@@ -76,8 +76,13 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
                 }
             ]
         });
+
+        // Filtrar los usuarios cercanos que no tienen un match mutuo
+        const usuariosSinMatchMutuo = usuariosCercanos.filter(usuarioCercano => {
+            return !(usuarioCercano.Matches1.length > 0 && usuarioCercano.Matches2.length > 0);
+        });
     
-        return usuariosCercanos;
+        return usuariosSinMatchMutuo;
     } catch (error) {
         console.error('Error al encontrar usuarios cercanos:', error);
         throw error;
@@ -85,6 +90,59 @@ const encontrarUsuariosCercanos = async (usuarioId) => {
 };
 
 
+
+const obtenerMatches = async (usuarioId) => {
+    try {
+        // Verificar si el usuario existe
+        const usuario = await Usuario.findByPk(usuarioId);
+        if (!usuario) {
+            throw new Error('El usuario no existe');
+        }
+
+        // Obtener los matches en los que el usuario es el usuario1
+        const matches = await Match.findAll({
+            where: {
+                usuario1_id: usuarioId,
+                visto2: true, // Verificar si el usuario2 ha marcado el match como visto
+                visto1: {
+                    [Op.or]: [false, null] // Verificar si el usuario1 no ha marcado el match como visto o si es nulo
+                }
+            }
+        });
+
+        // Obtener los ids de los usuarios2 de los matches encontrados
+        const usuarios2Ids = matches.map(match => match.usuario2_id);
+
+        // Obtener la información del usuario2 y del match
+        const [usuarios2, matchesConUsuarios] = await Promise.all([
+            Usuario.findAll({
+                where: {
+                    usuario_id: usuarios2Ids // Filtrar por los ids de los usuarios2
+                }
+            }),
+            Promise.all(matches.map(async (match) => {
+                const usuario2 = await Usuario.findByPk(match.usuario2_id);
+                return { match, usuario2 };
+            }))
+        ]);
+
+        // Combinar la información del usuario2 y del match en un solo objeto
+        const matchesConInfo = matchesConUsuarios.map((data) => {
+            return {
+                match: data.match,
+                usuario2: data.usuario2
+            };
+        });
+
+        return matchesConInfo;
+    } catch (error) {
+        console.error('Error al obtener matches:', error);
+        throw error;
+    }
+};
+
+
 export default {
-    encontrarUsuariosCercanos
+    encontrarUsuariosCercanos,
+    obtenerMatches
 };

@@ -2,6 +2,7 @@ import 'package:app_jobder/domain/entities/usuario_cercano.dart'; // Importa la 
 import 'package:app_jobder/domain/entities/habilidad.dart'; // Importa la clase Habilidad
 
 class UserData {
+  final String id; // Agregar un campo para el ID del usuario
   final String name;
   final String imageUrl;
   final int age;
@@ -22,6 +23,7 @@ class UserData {
     required this.habilidades, // Añade la lista de habilidades al constructor
     required this.latitud,
     required this.longitud,
+    required this.id, // Incluir el ID del usuario
   });
 
   factory UserData.fromUsuarioCercano(UsuarioCercano usuario) {
@@ -35,6 +37,7 @@ class UserData {
       habilidades: usuario.habilidades, // Asigna la lista de habilidades del usuario
       latitud: usuario.latitud,
       longitud: usuario.longitud,
+      id: 'ID del usuario', // Asignar un ID único al usuario
     );
   }
 }

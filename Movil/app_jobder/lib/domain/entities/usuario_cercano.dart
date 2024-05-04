@@ -68,6 +68,7 @@ class UsuarioCercano {
       habilidades: habilidades, // Pasar la lista de habilidades
       latitud: latitud,
       longitud: longitud,
+      id: usuarioId.toString(), // Convertir el ID a una cadena
     );
   }
 }

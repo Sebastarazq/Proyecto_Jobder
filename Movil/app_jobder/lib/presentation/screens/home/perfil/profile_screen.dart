@@ -1,6 +1,10 @@
 import 'package:app_jobder/config/helpers/crud_habilidades.dart';
+import 'package:app_jobder/config/helpers/crud_red_social.dart';
 import 'package:app_jobder/domain/entities/habilidad.dart';
+import 'package:app_jobder/domain/entities/red_social.dart';
 import 'package:app_jobder/presentation/screens/home/perfil/edit_profile_habilidades.dart';
+import 'package:app_jobder/presentation/screens/home/perfil/edit_profile_red_social.dart';
+import 'package:app_jobder/presentation/screens/shared/widgets/redes_sociales_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:app_jobder/config/helpers/crud_user.dart';
 import 'package:app_jobder/config/helpers/location_service.dart';
@@ -24,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late Future<UserModel> userFuture;
   List<Habilidad>? _allHabilidades; // Lista de todas las habilidades
   List<Habilidad>? _usuarioHabilidades; // Lista de habilidades del usuario
+  List<RedSocial>? _usuarioRedesSociales; // Nueva variable de estado
 
 
   @override
@@ -32,7 +37,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     userFuture = getUserData();
     _fetchAllHabilidades(); // Obtener todas las habilidades
     _fetchUsuarioHabilidades(); // Obtener las habilidades del usuario
+    _fetchUsuarioRedesSociales(); // Obtener las redes sociales del usuario
   }
+
+  Future<void> _fetchUsuarioRedesSociales() async {
+    try {
+      String userId = await _getUserId();
+      int userIdInt = int.tryParse(userId) ?? 0;
+      RedesSocialesRepository redesSocialesRepository = RedesSocialesRepository();
+      List<RedSocial> usuarioRedesSociales = await redesSocialesRepository.getRedesSocialesUsuario(userIdInt);
+      setState(() {
+        _usuarioRedesSociales = usuarioRedesSociales;
+      });
+    } catch (error) {
+      print('Error al obtener las redes sociales del usuario: $error');
+    }
+  }
+
 
   Future<void> _fetchAllHabilidades() async {
   try {
@@ -184,6 +205,34 @@ String _formatHabilidades(List<Habilidad>? habilidades) {
                           return itemProfile('Ubicación', locationName, Icons.location_on);
                         }
                       },
+                    ),
+                    const SizedBox(height: 20),
+                    if (_usuarioRedesSociales != null && _usuarioRedesSociales!.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Redes sociales',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(height: 10),
+                          RedesSocialesWidget(redesSociales: _usuarioRedesSociales),
+                        ],
+                      ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _navigateToEditRedesSociales();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(15),
+                          backgroundColor: const Color(0xFF096BFF),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Editar redes sociales'),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     SizedBox(
@@ -487,6 +536,29 @@ void _pickImageFromCamera() async {
 
       // Actualizar las habilidades del usuario en la vista del perfil
       _fetchUsuarioHabilidades();
+    }
+  }
+
+  void _navigateToEditRedesSociales() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString('usuario_id') ?? '';
+    int userIdInt = int.tryParse(userId) ?? 0; // Convertir el ID de usuario de String a int
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditRedesSocialesScreen(userId: userIdInt),
+      ),
+    );
+
+    // Verificar si las redes sociales se actualizaron
+    if (result == true) {
+      // Recargar los datos del usuario
+      setState(() {
+        userFuture = getUserData();
+      });
+
+      // Actualizar las redes sociales del usuario en la vista del perfil
+      _fetchUsuarioRedesSociales();
     }
   }
 }
