@@ -51,8 +51,30 @@ const asociarRedesSociales = async (req, res) => {
     }
   };
 
+  const obtenerTodasLasRedesUsuarioRedes = async (req, res) => {
+    try {
+      const { usuarioId } = req.params;
+      console.log('usuarioId para obtener redes:', usuarioId);
+  
+      // Llama al servicio para verificar si el usuario existe y obtener sus redes sociales
+      const redesSociales = await redesSocialesService.obtenerRedesSocialesUsuario(usuarioId);
+  
+      // Verificar si el resultado es un mensaje de error
+      if (redesSociales.message) {
+        return res.status(404).json({ message: redesSociales.message });
+      }
+  
+      res.status(200).json(redesSociales);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al obtener las redes sociales del usuario' });
+    }
+  };
+  
+
 export default {
   getAllRedesSociales,
   asociarRedesSociales,
-  getRedesSocialesUsuario
+  getRedesSocialesUsuario,
+  obtenerTodasLasRedesUsuarioRedes
 };

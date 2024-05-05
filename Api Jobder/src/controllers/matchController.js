@@ -44,10 +44,119 @@ const getMatches = async(req, res) => {
   }
 }
 
+const getMatchesCompletados = async (req, res) => {
+  try {
+    // Verificar si el usuario está autenticado y obtener su ID
+    const usuarioId = req.body.usuario_id;
+    if (!usuarioId) {
+      return res.status(400).json({ error: 'ID de usuario no proporcionado' });
+    }
+
+    // Llamar al servicio para obtener los matches completados
+    const matchesCompletados = await matchService.obtenerMatchesCompletados(usuarioId);
+    
+    // Verificar si no hay matches completados
+    if (matchesCompletados.length === 0) {
+      return res.status(404).json({ message: 'No tienes matches completados' });
+    }
+
+    // Enviar la respuesta con los matches completados
+    res.status(200).json({ matchesCompletados });
+  } catch (error) {
+    console.error('Error al obtener matches completados:', error);
+    res.status(500).json({ error: 'Error al obtener matches completados' });
+  }
+}
+
+const crearMatch = async (req, res) => {
+  try {
+    const { usuarioId1, usuarioId2, visto2 } = req.body;
+
+    // Verificar si los IDs de usuario y el visto2 están presentes
+    if (!usuarioId1 || !usuarioId2 || visto2 === undefined) {
+      return res.status(400).json({ error: 'Datos incompletos para crear un match' });
+    }
+
+    // Crear el match en la base de datos
+    const matchCreado = await matchService.crearMatch(usuarioId1, usuarioId2, visto2);
+    console.log('matchCreado:', matchCreado);
+
+    // Si llega aquí, el match se creó correctamente
+    return res.status(201).json({ message: 'Match creado exitosamente' });
+
+  } catch (error) {
+    // Capturar los errores específicos y enviar mensajes adecuados
+    if (error.message === 'Uno o ambos usuarios no existen') {
+      return res.status(404).json({ error: error.message });
+    } else if (error.message === 'Ya existe un match entre estos usuarios') {
+      return res.status(400).json({ error: error.message });
+    } else {
+      console.error('Error al crear match:', error);
+      return res.status(500).json({ error: 'Error al crear match' });
+    }
+  }
+};
+
+const aprobarMatch = async (req, res) => {
+  try {
+    // Obtener el ID del match a aprobar desde los parámetros de la solicitud
+    const matchId = req.body.match_id;
+
+    // Verificar si el ID del match está presente
+    if (!matchId) {
+      return res.status(400).json({ error: 'ID de match no proporcionado' });
+    }
+
+    // Llamar al servicio para aprobar el match
+    const matchAprobado = await matchService.aprobarMatch(matchId);
+
+    if (matchAprobado) {
+      // Si el match se aprobó correctamente
+      return res.status(200).json({ message: 'Match aprobado exitosamente' });
+    } else {
+      // Si el match no existe
+      return res.status(404).json({ error: 'El match no existe' });
+    }
+  } catch (error) {
+    console.error('Error al aprobar match:', error);
+    res.status(500).json({ error: 'Error al aprobar match' });
+  }
+};
+
+const denegarMatch = async (req, res) => {
+  try {
+    // Obtener el ID del match a denegar desde los parámetros de la solicitud
+    const matchId = req.body.match_id;
+
+    // Verificar si el ID del match está presente
+    if (!matchId) {
+      return res.status(400).json({ error: 'ID de match no proporcionado' });
+    }
+
+    // Llamar al servicio para denegar el match
+    const matchDenegado = await matchService.denegarMatch(matchId);
+
+    if (matchDenegado) {
+      // Si el match se denegó correctamente
+      return res.status(200).json({ message: 'Match denegado exitosamente' });
+    } else {
+      // Si el match no existe
+      return res.status(404).json({ error: 'El match no existe' });
+    }
+  } catch (error) {
+    console.error('Error al denegar match:', error);
+    res.status(500).json({ error: 'Error al denegar match' });
+  }
+};
+
 
 
 export default {
     getUsuariosCercanos,
-    getMatches
+    getMatches,
+    getMatchesCompletados,
+    crearMatch,
+    aprobarMatch,
+    denegarMatch
 
 };

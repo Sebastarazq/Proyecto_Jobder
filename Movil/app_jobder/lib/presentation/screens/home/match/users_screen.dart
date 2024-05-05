@@ -29,6 +29,10 @@ class _UsersScreenState extends State<UsersScreen> {
   List<UserData> _users = []; // Lista de usuarios
   List<Habilidad>? _usuarioHabilidades; // Lista de habilidades del usuario
   int userIdInt = 0; // Actualización: Variable de instancia para almacenar userIdInt, inicializada con un valor predeterminado de 0
+  bool _hasLocationPermission = false;
+  bool _hasExitedWithoutGrantingPermission = false;
+  List<int> _usersWithMatch = []; // Lista para almacenar los IDs de los usuarios con match creado
+  List<int> _rejectedUsers = []; // Lista para almacenar los IDs de los usuarios rechazados
 
   @override
   void initState() {
@@ -37,23 +41,87 @@ class _UsersScreenState extends State<UsersScreen> {
     _getUsuariosCercanos(); // Llama a la función para obtener usuarios cercanos al iniciar la pantalla
   }
 
+  void _handleCreateMatch(int userId) {
+    setState(() {
+      _usersWithMatch.add(userId);
+    });
+    _getUsuariosCercanos();
+  }
+
+  void _handleRejectUser(int userId) {
+    setState(() {
+      _rejectedUsers.add(userId);
+    });
+    _getUsuariosCercanos();
+  }
   void _checkAndRequestLocationPermission() async {
     bool permissionGranted = false;
-  
-    while (!permissionGranted) {
+    _hasExitedWithoutGrantingPermission = false;
+
+    while (!permissionGranted && !_hasExitedWithoutGrantingPermission) {
       permissionGranted = await LocationPermissionHelper.requestLocationPermission(context);
-      
+
       if (!permissionGranted) {
-        // En este punto, el permiso de ubicación no fue concedido.
-        // Puedes mostrar un mensaje o tomar cualquier otra acción necesaria.
-        
-        // Verificar si el usuario concedió el permiso después de volver desde la configuración
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Es necesario conceder acceso a la ubicación para utilizar esta función.'),
+            action: SnackBarAction(
+              label: 'Configuración',
+              onPressed: () {
+                Geolocator.openAppSettings();
+              },
+            ),
+          ),
+        );
+
         LocationPermission updatedPermission = await Geolocator.checkPermission();
         if (updatedPermission == LocationPermission.denied) {
-          // El usuario sigue sin conceder el permiso, por lo que no se le permite ir a ningún lado
-          // Aquí puedes mostrar un mensaje adicional o tomar otra acción necesaria
+          final shouldRetry = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Permiso de ubicación'),
+              content: const Text('No ha concedido el permiso de ubicación. ¿Desea volver a intentarlo?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true);
+                  },
+                  child: const Text('Sí'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(false);
+                  },
+                  child: const Text('No'),
+                ),
+              ],
+            ),
+          );
+
+          if (!shouldRetry) {
+            _hasExitedWithoutGrantingPermission = true;
+          }
         }
+      } else {
+        setState(() {
+          _hasLocationPermission = true;
+        });
       }
+    }
+
+    if (!permissionGranted && _hasExitedWithoutGrantingPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se puede continuar sin conceder los permisos de ubicación.'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+
+    if (!permissionGranted) {
+      setState(() {
+        _hasLocationPermission = false;
+      });
     }
   }
 
@@ -68,14 +136,18 @@ class _UsersScreenState extends State<UsersScreen> {
         print('Usuarios cercanos: $usuariosCercanos');
         
         setState(() {
-          _users = usuariosCercanos.map((usuario) {
-            print('usuario_id: ${usuario.usuarioId}');
-            print('Usuario: ${usuario.nombre}');
-            print('Foto de perfil: ${usuario.fotoPerfil}');
-            print('Descripción: ${usuario.descripcion}');
-            return usuario.toUserData();
-          }).toList();
-        });
+        _users = usuariosCercanos.map((usuario) {
+          // Filtra los usuarios que ya tienen un match creado o fueron rechazados
+          if (_usersWithMatch.contains(usuario.usuarioId) || _rejectedUsers.contains(usuario.usuarioId)) {
+            return null; // Omite este usuario
+          }
+          print('usuario_id: ${usuario.usuarioId}');
+          print('Usuario: ${usuario.nombre}');
+          print('Foto de perfil: ${usuario.fotoPerfil}');
+          print('Descripción: ${usuario.descripcion}');
+          return usuario.toUserData();
+        }).whereType<UserData>().toList();
+      });
       } else {
         print('Error: userId no es un entero válido.');
       }
@@ -88,23 +160,43 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
-  @override
+ @override
 Widget build(BuildContext context) {
+  if (!_hasLocationPermission || _hasExitedWithoutGrantingPermission) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Es necesario conceder acceso a la ubicación para utilizar esta aplicación.',
+              textAlign: TextAlign.center,
+            ),
+            ElevatedButton(
+              onPressed: _checkAndRequestLocationPermission,
+              child: const Text('Solicitar permisos'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   final bool isControllerAvailable = mounted;
 
   return Scaffold(
     appBar: AppBar(
-      backgroundColor: Colors.transparent, // Make app bar transparent
-      elevation: 0, // Remove app bar elevation
+      backgroundColor: Colors.transparent,
+      elevation: 0,
       title: const Row(
         children: [
-          Icon(Icons.work), // Icono de trabajo
-          SizedBox(width: 8), // Espacio entre el icono y el título
-          Text('Jobder'), // Título
+          Icon(Icons.work),
+          SizedBox(width: 8),
+          Text('Jobder'),
         ],
       ),
     ),
-    extendBodyBehindAppBar: true, // Extend body behind app bar
+    extendBodyBehindAppBar: true,
     body: Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -116,13 +208,14 @@ Widget build(BuildContext context) {
       child: SafeArea(
         child: Column(
           children: [
-            Expanded(
-              child: _users.isNotEmpty
-                ? CardSwiper(
-                    controller: controller,
-                    cardsCount: _users.length,
-                    numberOfCardsDisplayed: 2, // Asegúrate de establecer este valor correctamente
-                    cardBuilder: (context, index, percentX, percentY) {
+            if (_users.isNotEmpty)
+              Expanded(
+                child: CardSwiper(
+                  controller: controller,
+                  cardsCount: _users.length,
+                  numberOfCardsDisplayed: _users.length == 1 ? 1 : 2,
+                  cardBuilder: (context, index, percentX, percentY) {
+                    try {
                       final user = _users[index];
                       return UserCard(
                         user: user,
@@ -139,15 +232,48 @@ Widget build(BuildContext context) {
                           }
                         },
                         habilidades: _usuarioHabilidades,
+                        onCreateMatch: _handleCreateMatch, // Pasa el método callback
+                        onRejectUser: _handleRejectUser, // Pasa el método callback
                       );
-                    },
-                  )
-                : Center(
-                    child: Text(
+                    } catch (e) {
+                      // Maneja la excepción de manera adecuada
+                      print('Error al construir la tarjeta del usuario: $e');
+                      return Container(); // Puedes retornar un contenedor vacío u otro widget según lo necesites
+                    }
+                  },
+                )
+              ),
+           if (_users.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
                       'No hay más usuarios para mostrar',
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 18, fontFamily: 'Poppins', fontWeight: FontWeight.w500, color: Colors.black),
+                      textAlign: TextAlign.center,
                     ),
-                  ),
+                    const SizedBox(height: 20), // Espacio entre el texto y el botón
+                    ElevatedButton(
+                      onPressed: () {
+                        // Vaciar las listas _usersWithMatch y _rejectedUsers
+                        setState(() {
+                          _usersWithMatch.clear();
+                          _rejectedUsers.clear();
+                        });
+                        // Llamar a la función para obtener nuevos usuarios
+                        _getUsuariosCercanos(); 
+                      },
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Color(0xFF096BFF), // Color del botón
+                      ),
+                      child: const Text('Realizar otra búsqueda'),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -165,9 +291,12 @@ class UserCard extends StatelessWidget {
   final VoidCallback? onSwipeRight;
   final CardSwiperController? controller;
   final List<Habilidad>? habilidades; // Lista de habilidades
+  final Function(int) onCreateMatch; // Callback para crear un match
+  final Function(int) onRejectUser; // Callback para rechazar un usuario
 
 
-  const UserCard({
+
+  UserCard({
     Key? key,
     required this.user,
     required this.userIdInt, // Agregado userIdInt como parámetro
@@ -175,8 +304,12 @@ class UserCard extends StatelessWidget {
     this.onSwipeLeft,
     this.onSwipeRight,
     this.habilidades, // Actualizado
+    required this.onCreateMatch, // Agregado el parámetro onCreateMatch
+    required this.onRejectUser, // Agregado el parámetro onRejectUser
     
   }) : super(key: key);
+
+  final MatchRepository _matchRepository = MatchRepository();
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +353,7 @@ class UserCard extends StatelessWidget {
                 Expanded(
                   flex: 4,
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                     ),
                     child: _buildUserImage(user.imageUrl),
@@ -244,7 +377,7 @@ class UserCard extends StatelessWidget {
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            Icon(Icons.star, size: 17, color: Colors.black87),
+                            const Icon(Icons.star, size: 17, color: Colors.black87),
                             const SizedBox(width: 5),
                             Expanded(
                               child: Text(
@@ -262,7 +395,7 @@ class UserCard extends StatelessWidget {
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            Icon(Icons.cake, size: 17, color: Colors.black87,),
+                            const Icon(Icons.cake, size: 17, color: Colors.black87,),
                             const SizedBox(width: 5),
                             Text(
                               '${user.age} años',
@@ -276,7 +409,7 @@ class UserCard extends StatelessWidget {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.category, size: 17, color: Colors.black87,),
+                            const Icon(Icons.category, size: 17, color: Colors.black87,),
                             const SizedBox(width: 5),
                             Text(
                               'Categoría: ${user.categoria ?? 'No disponible'}',
@@ -290,7 +423,7 @@ class UserCard extends StatelessWidget {
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            Icon(Icons.description, size: 17, color: Colors.black87,),
+                            const Icon(Icons.description, size: 17, color: Colors.black87,),
                             const SizedBox(width: 5),
                             Expanded(
                               child: Text(
@@ -308,7 +441,7 @@ class UserCard extends StatelessWidget {
                         const SizedBox(height: 10),
                         Row(
                           children: [
-                            Icon(Icons.location_on, size: 17, color: Colors.black87),
+                            const Icon(Icons.location_on, size: 17, color: Colors.black87),
                             const SizedBox(width: 5),
                             Expanded(
                               child: FutureBuilder<String>(
@@ -346,7 +479,12 @@ class UserCard extends StatelessWidget {
               left: 80.0,
               child: FloatingActionButton(
                 heroTag: null,
-                onPressed: onSwipeLeft,
+                onPressed: () {
+                  onRejectUser(int.parse(user.id)); // Llama al callback para rechazar usuario
+                  if (onSwipeLeft != null) {
+                    onSwipeLeft!();
+                  }
+                },
                 child: const Icon(Icons.close),
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
@@ -357,7 +495,22 @@ class UserCard extends StatelessWidget {
               right: 80.0,
               child: FloatingActionButton(
                 heroTag: null,
-                onPressed: onSwipeRight,
+                onPressed: () async {
+                  try {
+                    final String mensaje = await _matchRepository.crearMatch(
+                      userIdInt,
+                      int.parse(user.id),
+                      true,
+                    );
+                    onCreateMatch(int.parse(user.id)); // Llama al callback para crear un match
+                    print(mensaje);
+                  } catch (error) {
+                    print('Error al crear match: $error');
+                  }
+                  if (onSwipeRight != null) {
+                    onSwipeRight!();
+                  }
+                },
                 child: const Icon(Icons.check),
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,

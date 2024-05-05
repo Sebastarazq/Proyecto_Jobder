@@ -71,5 +71,7 @@ router.get('/:usuarioId', usuarioHabilidadController.getHabilidadesUsuario);
 // Ruta para actualizar las habilidades del usuario
 router.post('/actualizar', usuarioHabilidadController.actualizarHabilidadesUsuario);
 
+router.post('/habilidades/:usuarioId', usuarioHabilidadController.getHabilidadesUsuarioHabilidad);
+
 // Exporta el router
 export default router;

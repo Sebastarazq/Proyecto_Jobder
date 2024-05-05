@@ -1,4 +1,5 @@
 import 'package:app_jobder/domain/entities/habilidad.dart';
+import 'package:app_jobder/domain/entities/habilidad_asociada.dart';
 import 'package:dio/dio.dart';
 
 class HabilidadesRepository {
@@ -73,4 +74,25 @@ class HabilidadesRepository {
       throw Exception('Error al actualizar habilidades: $error');
     }
   }
+
+  Future<HabilidadesUsuarioHabilidadResponse> getHabilidadesUsuarioHabilidad(int usuarioId) async {
+  try {
+    final response = await _dio.post('http://192.168.1.5:3000/api/v1/usuarioshabilidades/habilidades/$usuarioId');
+    if (response.statusCode == 200) {
+      List<dynamic> data = response.data['habilidades']; // Accedemos directamente a la lista de habilidades
+      print('Data: $data');
+
+      // Mapear la lista de habilidades a objetos HabilidadUsuarioHabilidad
+      List<HabilidadUsuarioHabilidad> habilidades = List<HabilidadUsuarioHabilidad>.from(data.map((x) => HabilidadUsuarioHabilidad.fromJson(x)));
+
+      // Retornar la respuesta con la lista de habilidades
+      return HabilidadesUsuarioHabilidadResponse(habilidades: habilidades);
+    } else {
+      String errorMessage = response.data['message'] ?? 'Error desconocido';
+      throw Exception('Error al obtener habilidades del usuario: $errorMessage');
+    }
+  } catch (error) {
+    throw Exception('Error al obtener habilidades del usuario: $error');
+  }
+}
 }

@@ -90,11 +90,24 @@ const actualizarHabilidadesUsuario = async (req, res) => {
     }
 };
 
+const getHabilidadesUsuarioHabilidad = async (req, res) => {
+    try {
+        const { usuarioId } = req.params;
+        const habilidades = await usuarioHabilidadService.getHabilidadesUsuarioHabilidad(usuarioId);
+        res.status(200).json(habilidades);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener las habilidades del usuario' });
+    }
+};
+
+
 
 
 export default {
     asociarHabilidadesUsuario,
     asociarHabilidadesUsuario2,
     getHabilidadesUsuario,
-    actualizarHabilidadesUsuario
+    actualizarHabilidadesUsuario,
+    getHabilidadesUsuarioHabilidad
 };

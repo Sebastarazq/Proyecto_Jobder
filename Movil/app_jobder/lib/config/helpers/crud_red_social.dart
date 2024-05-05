@@ -1,4 +1,5 @@
 import 'package:app_jobder/domain/entities/red_social_basica.dart';
+import 'package:app_jobder/domain/entities/red_social_usuario.dart';
 import 'package:dio/dio.dart';
 import 'package:app_jobder/domain/entities/red_social.dart';
 
@@ -50,6 +51,21 @@ class RedesSocialesRepository {
       }
     } catch (error) {
       throw Exception('Error al asociar redes sociales al usuario: $error');
+    }
+  }
+
+  Future<List<RedSocialUsuario>> obtenerRedesSocialesUsuarioRedes(int usuarioId) async {
+    try {
+      final response = await _dio.post('http://192.168.1.5:3000/api/v1/redes/vinculadas/$usuarioId');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+        List<RedSocialUsuario> redesSociales = data.map((json) => RedSocialUsuario.fromJson(json)).toList();
+        return redesSociales;
+      } else {
+        throw Exception('Error al obtener redes sociales del usuario: ${response.data['message']}');
+      }
+    } catch (error) {
+      throw Exception('Error al obtener redes sociales del usuario: $error');
     }
   }
 }

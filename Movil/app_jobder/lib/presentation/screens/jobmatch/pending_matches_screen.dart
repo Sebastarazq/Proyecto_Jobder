@@ -1,110 +1,272 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:app_jobder/config/helpers/crud_match.dart';
+import 'package:app_jobder/config/helpers/location_service.dart';
+import 'package:app_jobder/domain/entities/match.dart';
+import 'package:app_jobder/presentation/screens/jobmatch/perfil_jobmatch/perfil_match.dart';
 
-class PendingMatchesScreen extends StatelessWidget {
+class PendingMatchesScreen extends StatefulWidget {
   const PendingMatchesScreen({Key? key}) : super(key: key);
+
+  @override
+  _PendingMatchesScreenState createState() => _PendingMatchesScreenState();
+}
+
+class _PendingMatchesScreenState extends State<PendingMatchesScreen> {
+  List<UserMatch> matches = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchMatches();
+  }
+
+  Future<void> _fetchMatches() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String userId = prefs.getString('usuario_id') ?? '';
+      int userIdInt = int.tryParse(userId) ?? 0;
+
+      List<UserMatch> fetchedMatches = await MatchRepository().obtenerMatches(userIdInt);
+      setState(() {
+        // Eliminar el usuario aprobado de la lista de matches
+        matches = fetchedMatches;
+        _isLoading = false;
+      });
+    } catch (error) {
+      print('Error al obtener matches: $error');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<String> _getCityName(double latitude, double longitude) async {
+    try {
+      String cityName = await LocationService.getCityName(latitude, longitude);
+      return cityName;
+    } catch (error) {
+      print('Error al obtener el nombre de la ciudad: $error');
+      return 'Error al obtener la ciudad';
+    }
+  }
+
+  Future<Uint8List> _loadImage(double width, double height) async {
+    try {
+      final ByteData data = await rootBundle.load('assets/images/user.jpeg');
+      return data.buffer.asUint8List();
+    } catch (error) {
+      print('Error loading asset image: $error');
+      rethrow;
+    }
+  }
+
+  Widget _buildUserImage(String imageUrl) {
+    if (imageUrl.toLowerCase().contains('assets')) {
+      return FutureBuilder<Uint8List>(
+        future: _loadImage(80, 80),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError) {
+              return const Icon(Icons.error, color: Colors.red);
+            } else {
+              return Image.memory(
+                snapshot.data!,
+                fit: BoxFit.cover,
+                width: 80,
+                height: 80,
+              );
+            }
+          } else {
+            return const CircularProgressIndicator();
+          }
+        },
+      );
+    } else {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: 80,
+        height: 80,
+      );
+    }
+  }
+
+  void _showSnackbar(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+      width: MediaQuery.of(context).size.width * 0.8,
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> _aprobarMatch(int matchId) async {
+    try {
+      String message = await MatchRepository().aprobarMatch(matchId);
+      _showSnackbar(context, message); // Aquí se pasa el context
+
+      // Limpiar la lista de matches
+      matches.clear();
+
+      // Refrescar la pantalla después de aprobar el match
+      await _fetchMatches();
+    } catch (error) {
+      _showSnackbar(context, 'Error al aprobar match: $error'); // Aquí se pasa el context
+    }
+  }
+
+  // Método para denegar un match
+  Future<void> _denegarMatch(int matchId) async {
+    try {
+      String message = await MatchRepository().denegarMatch(matchId);
+      _showSnackbar(context, message); // Mostrar SnackBar
+      // Limpiar la lista de matches
+      matches.clear();
+      // Refrescar la pantalla después de denegar el match
+      await _fetchMatches();
+    } catch (error) {
+      _showSnackbar(context, 'Error al denegar match: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
-        itemCount: 3, // Ejemplo con 3 matches pendientes
-        itemBuilder: (context, index) {
-          // Datos de ejemplo para cada match pendiente
-          final usuario2 = {
-            'nombre': 'Juan Perez',
-            'email': 'juanperez@example.com',
-            'categoria': 'Desarrollador',
-            'foto_perfil': 'https://via.placeholder.com/150', // URL de la foto de perfil
-            'ubicacion': 'Ciudad', // Ejemplo de ubicación
-          };
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : matches.isEmpty
+              ? const Center(
+                  child: Text(
+                    'No hay matches pendientes',
+                    style: TextStyle(fontSize: 18),
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: matches.length,
+                  itemBuilder: (context, index) {
+                    final UserMatch match = matches[index];
+                    final usuario2 = match.usuario2;
 
-          return Card(
-            margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            child: InkWell(
-              onTap: () {
-                // Agregar lógica para manejar el tap en el match pendiente
-                print('Detalles del Match ${index + 1}');
-              },
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Image.network(
-                        usuario2['foto_perfil'] ?? '',
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            usuario2['nombre'] ?? '',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black, // Color de texto negro para el nombre
+                    return FutureBuilder(
+                      future: _getCityName(usuario2.latitud ?? 0.0, usuario2.longitud ?? 0.0),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          String cityName = snapshot.data.toString();
+                          return InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => PerfilMatchScreen(
+                                    userMatch: match,
+                                    cityName: cityName,
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Card(
+                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20.0),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: _buildUserImage(usuario2.foto_perfil ?? ''),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            usuario2.nombre,
+                                            style: const TextStyle(
+                                              fontSize: 20,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            usuario2.email,
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Categoría: ${usuario2.categoria}',
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Ubicación: $cityName',
+                                            style: TextStyle(
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Column(
+                                      children: [
+                                        IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          _denegarMatch(match.matchId);
+                                        },
+                                      ),
+                                        const SizedBox(height: 8),
+                                        IconButton(
+                                          icon: const Icon(Icons.check),
+                                          onPressed: () {
+                                            _aprobarMatch(match.matchId);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            usuario2['email'] ?? '',
-                            style: TextStyle(
-                              color: Colors.grey[700], // Color de texto gris para el email
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Categoría: ${usuario2['categoria'] ?? ''}',
-                            style: TextStyle(
-                              color: Colors.grey[700], // Color de texto gris para la categoría
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Ubicación: ${usuario2['ubicacion'] ?? ''}',
-                            style: TextStyle(
-                              color: Colors.grey[700], // Color de texto gris para la ubicación
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.close),
-                          onPressed: () {
-                            // Agregar lógica para rechazar el match pendiente
-                            print('Rechazar Match ${index + 1}');
-                          },
-                        ),
-                        SizedBox(height: 8),
-                        IconButton(
-                          icon: Icon(Icons.check),
-                          onPressed: () {
-                            // Agregar lógica para aceptar el match pendiente
-                            print('Aceptar Match ${index + 1}');
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
+                          );
+                        }
+                      },
+                    );
+                  },
                 ),
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

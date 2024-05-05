@@ -121,7 +121,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ),
                       SizedBox(height: 10),
                       _buildInfoRow(Icons.cake, 'Edad:', '${widget.user.age} años'),
-                      _buildInfoRow(Icons.star, 'Habilidades:', _formatHabilidades(widget.user.habilidades)),
+                      _buildInfoRow2(Icons.star, 'Habilidades:', _buildHabilidadesRow(widget.user.habilidades)),
                       _buildInfoRow(Icons.category, 'Categoría:', widget.user.categoria ?? 'No disponible'),
                       _buildInfoRow(Icons.person, 'Descripción:', widget.user.descripcion ?? 'No disponible'),
                     ],
@@ -223,6 +223,62 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
     );
   }
+  Widget _buildInfoRow2(IconData icon, String title, Widget content) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(
+          icon,
+          color: Colors.blueGrey[800],
+          size: 24,
+        ),
+        SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey[800],
+                ),
+              ),
+              SizedBox(height: 4),
+              content, // Mostrar el contenido proporcionado (en este caso, un Widget)
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+  Widget _buildHabilidadesRow(List<Habilidad>? habilidades) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Wrap(
+        spacing: 8.0, // Espacio entre los Chips
+        runSpacing: 4.0, // Espacio entre las filas de Chips
+        children: habilidades?.map((habilidad) {
+          return Chip(
+            label: Text(
+              habilidad.nombre,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: Colors.blueGrey[700],
+          );
+        }).toList() ?? [],
+      ),
+    );
+  }
+
 
   Widget _buildRedesSocialesWidget() {
     return FutureBuilder<List<RedSocial>>(

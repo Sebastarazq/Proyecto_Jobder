@@ -67,10 +67,53 @@ const getRedesSocialesUsuario = async (usuarioId) => {
       throw new Error('Error al asociar redes sociales al usuario.');
     }
   };
+
+  const obtenerRedesSocialesUsuario = async (usuarioId) => {
+    try {
+      // Verificar si el usuario existe
+      const usuario = await Usuario.findByPk(usuarioId);
+      if (!usuario) {
+        return { message: 'El usuario no existe.' };
+      }
+  
+      // Consulta para obtener las redes sociales del usuario por su ID
+      const redesSocialesUsuario = await UsuariosRedesSociales.findAll({
+        where: { usuario_id: usuarioId }
+      });
+  
+      if (redesSocialesUsuario.length === 0) {
+        // Si el usuario no tiene ninguna red social vinculada, devolver un mensaje específico
+        return { message: 'El usuario no tiene ninguna red social vinculada.' };
+      }
+  
+      // Obtener los IDs de las redes sociales del usuario
+      const idsRedesSociales = redesSocialesUsuario.map(red => red.red_id);
+  
+      // Consulta para obtener los nombres de las redes sociales utilizando los IDs obtenidos
+      const nombresRedesSociales = await RedSocial.findAll({
+        where: { red_id: idsRedesSociales }
+      });
+  
+      // Mapear los nombres de las redes sociales
+      const nombres = nombresRedesSociales.map(red => {
+        const redSocial = redesSocialesUsuario.find(r => r.red_id === red.red_id);
+        return {
+          red_id: red.red_id,
+          nombre: red.nombre,
+          nombreUsuarioAplicacion: redSocial.nombre_usuario_aplicacion
+        };
+      });
+  
+      return nombres;
+    } catch (error) {
+      throw error;
+    }
+  };
   
 
 export default {
   getAllRedesSociales,
   actualizarRedesSociales,
-  getRedesSocialesUsuario
+  getRedesSocialesUsuario,
+  obtenerRedesSocialesUsuario
 };
