@@ -34,7 +34,7 @@ class _PerfilMatchScreenState extends State<PerfilMatchScreen> {
 
   Future<void> _loadHabilidades() async {
     try {
-      final habilidadesResponse = await habilidadesRepository.getHabilidadesUsuarioHabilidad(widget.userMatch.usuario2Id);
+      final habilidadesResponse = await habilidadesRepository.getHabilidadesUsuarioHabilidad(widget.userMatch.usuario1Id);
       print('Habilidades: $habilidadesResponse');
 
       setState(() {
@@ -47,7 +47,7 @@ class _PerfilMatchScreenState extends State<PerfilMatchScreen> {
 
   Future<void> _loadRedesSociales() async {
     try {
-      final redesSocialesResponse = await redesSocialesRepository.obtenerRedesSocialesUsuarioRedes(widget.userMatch.usuario2Id);
+      final redesSocialesResponse = await redesSocialesRepository.obtenerRedesSocialesUsuarioRedes(widget.userMatch.usuario1Id);
       print('Redes Sociales: $redesSocialesResponse');
 
       setState(() {
@@ -71,14 +71,14 @@ class _PerfilMatchScreenState extends State<PerfilMatchScreen> {
                 fit: StackFit.expand,
                 children: [
                   SafeArea(
-                    child: _buildUserImage(widget.userMatch.usuario2.foto_perfil ?? ''),
+                    child: _buildUserImage(widget.userMatch.usuario1.foto_perfil ?? ''),
                   ),
                   Positioned(
                     left: 16,
                     right: 16,
                     bottom: 16,
                     child: Text(
-                      widget.userMatch.usuario2.nombre,
+                      widget.userMatch.usuario1.nombre,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 32,
@@ -109,13 +109,13 @@ class _PerfilMatchScreenState extends State<PerfilMatchScreen> {
                     children: [
                       _buildInfoRow(Icons.location_on, 'Ciudad:', widget.cityName),
                       const SizedBox(height: 10),
-                      _buildInfoRow(Icons.cake, 'Edad:', '${widget.userMatch.usuario2.edad} años'),
+                      _buildInfoRow(Icons.cake, 'Edad:', '${widget.userMatch.usuario1.edad} años'),
                       const SizedBox(height: 10),
                       HabilidadesWidget(habilidades: habilidadesUsuario),
                       const SizedBox(height: 10),
-                      _buildInfoRow(Icons.category, 'Categoría:', widget.userMatch.usuario2.categoria),
+                      _buildInfoRow(Icons.category, 'Categoría:', widget.userMatch.usuario1.categoria),
                       const SizedBox(height: 10),
-                      _buildInfoRow(Icons.person, 'Descripción:', widget.userMatch.usuario2.descripcion ?? 'No disponible'),
+                      _buildInfoRow(Icons.person, 'Descripción:', widget.userMatch.usuario1.descripcion ?? 'No disponible'),
                       const SizedBox(height: 15),
                       _buildRedesSocialesWidget(),
                     ],

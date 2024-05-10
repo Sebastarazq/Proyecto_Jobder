@@ -4,6 +4,7 @@ import UsuariosRedesSociales from './UsuarioRedSocial.js';
 import Habilidad from './Habilidad.js';
 import RedSocial from './RedSocial.js';
 import Match from './Match.js';
+import UsuarioHabilidad from './UsuarioHabilidad.js';
 //import db from '../database/db.js'; // Asegúrate de importar la instancia de la base de datos
 
 // Define las relaciones entre los modelos

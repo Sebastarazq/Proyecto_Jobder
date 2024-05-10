@@ -1,4 +1,5 @@
 import matchService from '../services/matchService.js';
+import { generaCodigo,generarJWT,decodificarJWT,generarJWTlargo,verificarJWT } from '../helpers/tokens.js';
 
 // Controlador para obtener usuarios cercanos
 const getUsuariosCercanos = async(req, res) => {
@@ -11,7 +12,6 @@ const getUsuariosCercanos = async(req, res) => {
       
       // Llamar al servicio para encontrar usuarios cercanos
       const usuariosCercanos = await matchService.encontrarUsuariosCercanos(usuarioId);
-      console.log('usuariosCercanos:', usuariosCercanos);
       
       // Enviar la respuesta con los usuarios cercanos
       res.status(200).json({ usuariosCercanos });
@@ -20,29 +20,63 @@ const getUsuariosCercanos = async(req, res) => {
       res.status(500).json({ error: 'Error al obtener usuarios cercanos' });
     }
 }
-
-const getMatches = async(req, res) => {
-  try {
+// Controlador para obtener usuarios por categorias
+const getUsuariosCategorias = async(req, res) => {
+    try {
       // Verificar si el usuario está autenticado y obtener su ID
       const usuarioId = req.body.usuario_id;
       if (!usuarioId) {
-          return res.status(400).json({ error: 'ID de usuario no proporcionado' });
+        return res.status(400).json({ error: 'ID de usuario no proporcionado' });
       }
       
-      // Llamar al servicio para obtener los matches del usuario
-      const matches = await matchService.obtenerMatches(usuarioId);
+      // Llamar al servicio para encontrar usuarios cercanos
+      const usuariosCercanos = await matchService.encontrarUsuariosPorCategorias(usuarioId);
       
-      if (matches.length === 0) {
-          return res.status(404).json({ message: 'No tienes matches' });
-      }
-      
-      // Enviar la respuesta con los matches
-      res.status(200).json({ matches });
-  } catch (error) {
-      console.error('Error al obtener matches del usuario:', error);
-      res.status(500).json({ error: 'Error al obtener matches del usuario' });
-  }
+      // Enviar la respuesta con los usuarios cercanos
+      res.status(200).json({ usuariosCercanos });
+    } catch (error) {
+      console.error('Error al obtener usuarios por categoria:', error);
+      res.status(500).json({ error: 'Error al obtener usuarios por categoria' });
+    }
 }
+
+const getMatches = async (req, res) => {
+  try {
+    // Verificar si se proporcionó el token en el cuerpo de la solicitud
+    const token = req.body.token;
+    if (!token) {
+      return res.status(400).json({ error: 'Token de autenticación no proporcionado' });
+    }
+
+    // Verificar la fecha de expiración del token
+    let decoded;
+    try {
+      decoded = decodificarJWT(token);
+    } catch (error) {
+      // Si hay un error al decodificar el token (incluido el caso de expiración), retornar un error
+      return res.status(401).json({ error: 'Token de autenticación inválido o expirado' });
+    }
+
+    // Obtener el ID de usuario del cuerpo de la solicitud
+    const usuarioId = req.body.usuario_id;
+    if (!usuarioId) {
+      return res.status(400).json({ error: 'ID de usuario no proporcionado' });
+    }
+
+    // Llamar al servicio para obtener los matches del usuario
+    const matches = await matchService.obtenerMatches(usuarioId);
+
+    if (matches.length === 0) {
+      return res.status(404).json({ message: 'No tienes matches' });
+    }
+
+    // Enviar la respuesta con los matches
+    res.status(200).json({ matches });
+  } catch (error) {
+    console.error('Error al obtener matches del usuario:', error);
+    res.status(500).json({ error: 'Error al obtener matches del usuario' });
+  }
+};
 
 const getMatchesCompletados = async (req, res) => {
   try {
@@ -70,15 +104,15 @@ const getMatchesCompletados = async (req, res) => {
 
 const crearMatch = async (req, res) => {
   try {
-    const { usuarioId1, usuarioId2, visto2 } = req.body;
+    const { usuarioId1, usuarioId2, visto1 } = req.body;
 
     // Verificar si los IDs de usuario y el visto2 están presentes
-    if (!usuarioId1 || !usuarioId2 || visto2 === undefined) {
+    if (!usuarioId1 || !usuarioId2 || visto1 === undefined) {
       return res.status(400).json({ error: 'Datos incompletos para crear un match' });
     }
 
     // Crear el match en la base de datos
-    const matchCreado = await matchService.crearMatch(usuarioId1, usuarioId2, visto2);
+    const matchCreado = await matchService.crearMatch(usuarioId1, usuarioId2, visto1);
     console.log('matchCreado:', matchCreado);
 
     // Si llega aquí, el match se creó correctamente
@@ -153,6 +187,7 @@ const denegarMatch = async (req, res) => {
 
 export default {
     getUsuariosCercanos,
+    getUsuariosCategorias,
     getMatches,
     getMatchesCompletados,
     crearMatch,

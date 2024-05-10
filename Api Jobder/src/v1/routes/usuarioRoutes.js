@@ -342,6 +342,10 @@ router.post('/infouser/token', userController.obtenerInfoUsuarioPorToken);// Rut
 // Ruta para subir imágenes utilizando Multer
 router.post('/perfilimg/:id/upload', upload.single('image'), userController.uploadImage);
 
+router.post('/loginverificarhuella', userController.loginVerificarHuella); // Ruta para verificar huella
+
+router.post('/loginhuella/:token', userController.loginHuella); // Ruta para iniciar sesión con huella
+
 
 
 

@@ -1,6 +1,6 @@
 import validator from 'validator';
 import userService from '../services/userService.js';
-import { generaCodigo,generarJWT,decodificarJWT } from '../helpers/tokens.js';
+import { generaCodigo,generarJWT,decodificarJWT,generarJWTlargo } from '../helpers/tokens.js';
 import {emailRegistro, recuperacionPassword, notificarCambioContraseña} from '../helpers/email.js';
 import { hashPassword } from '../helpers/hash.js';
 import multer from 'multer';
@@ -24,7 +24,7 @@ const getUserById = async (req, res) => {
         return res.status(404).json({ message: 'Usuario no encontrado' });
       }
       res.status(200).json(user);
-      console.log(user);
+      //console.log(user);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: 'Error al obtener usuario por ID' });
@@ -152,7 +152,7 @@ const confirmUser = async (req, res) => {
       // Ajusta el objeto que se pasa a generarJWT para contener solo el id y el nombre
       const datosParaToken = {
         id: user.usuario_id,
-        nombre: user.nombre
+        email: user.email
       };
       const usuario_id = user.usuario_id;
       
@@ -173,7 +173,92 @@ const confirmUser = async (req, res) => {
       res.status(500).json({ message: 'Error al iniciar sesión' });
     }
   };
+  const loginVerificarHuella = async (req, res) => {
+    try {
+      const { email, password, celular } = req.body;
+      if ((!email && !celular) || !password) {
+        return res.status(400).json({ message: 'Correo electrónico/celular y contraseña son obligatorios' });
+      }
+      let user;
+      if (email) {
+        user = await userService.loginByEmail(email, password);
+      } else if (celular) {
+        user = await userService.loginByCellphone(celular, password);
+      }
+      if (!user) {
+        return res.status(401).json({ message: 'Correo electrónico/celular o contraseña incorrectos' });
+      }
+      
+      // Ajusta el objeto que se pasa a generarJWT para contener solo el id y el nombre
+      const datosParaToken = {
+        id: user.usuario_id,
+        email: user.email
+      };
+      const usuario_id = user.usuario_id;
+      
+      // Genera el token utilizando los datos ajustados
+      const token = generarJWTlargo(datosParaToken);
+      console.log('token largo de huella digital',token)
+      res.status(200).json({ token,usuario_id });
+    } catch (error) {
+      console.error(error);
+      if (error.message === 'La cuenta no existe') {
+        return res.status(401).json({ message: 'La cuenta no existe' });
+      }
+      if (error.message === 'La cuenta no está confirmada') {
+        return res.status(401).json({ message: 'La cuenta no está confirmada' });
+      }
+      if (error.message === 'Credenciales inválidas') {
+        return res.status(401).json({ message: 'Credenciales inválidas' });
+      }
+      res.status(500).json({ message: 'Error al iniciar sesión' });
+    }
+  };
 
+  const loginHuella = async (req, res) => {
+    try {
+      const token = req.params.token; // Recibe el token de la URL
+  
+      // Verificar si el token está presente en la URL
+      if (!token) {
+        throw new Error("Token no proporcionado en la URL");
+      }
+      console.log('Token de huella digital:', token);
+  
+      // Decodificar el token
+      const decodedToken = decodificarJWT(token);
+  
+      // Verificar si el token es válido
+      if (!decodedToken) {
+        throw new Error("Token inválido");
+      }
+  
+      // Extraer el id del usuario del token decodificado
+      const { id } = decodedToken;
+  
+      // Buscar el usuario por su ID utilizando el servicio
+      const userInfo = await userService.getUserById(id);
+      if (!userInfo) {
+        throw new Error('El usuario con el ID proporcionado no existe');
+      }
+  
+      // Ajustar el objeto que se pasa a generarJWT para contener solo el id y el nombre
+      const datosParaToken = {
+        id: userInfo.id,
+        email: userInfo.email
+      };
+  
+      // Generar un nuevo token con el ID y el correo electrónico del usuario
+      const nuevoToken = generarJWT(datosParaToken);
+      console.log('Inicio de sesión con huella digital exitoso');
+      console.log('Nuevo token generado:', nuevoToken);
+  
+      // Devolver el nuevo token en la respuesta
+      res.status(200).json({ message: "Token válido", token: nuevoToken, usuario_id: id });
+    } catch (error) {
+      res.status(400).json({ message: "Error al verificar el token", error: error.message });
+    }
+  };
 
   const updateUserPartialInfo = async (req, res) => {
     try {
@@ -307,7 +392,7 @@ const uploadImage = async (req, res) => {
     console.log(req.file);
 
     // Guarda la URL de la imagen en la base de datos
-    const imageUrl = `http://192.168.1.5:3000/uploads/${req.file.filename}`;
+    const imageUrl = `http://192.168.6.189:3000/uploads/${req.file.filename}`;
 
     // Obtén el ID de usuario de los parámetros de la URL
     const userId = req.params.id;
@@ -334,5 +419,7 @@ export default {
   updateUserPartialInfo,
   sendPasswordResetCode,
   resetPassword,
-  uploadImage
+  uploadImage,
+  loginVerificarHuella,
+  loginHuella
 };

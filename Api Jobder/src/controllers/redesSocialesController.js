@@ -15,7 +15,7 @@ const getRedesSocialesUsuario = async (req, res) => {
     try {
         const { usuarioId } = req.params;
         const redesSociales = await redesSocialesService.getRedesSocialesUsuario(usuarioId);
-        console.log('redes sociales del usuario:', redesSociales)
+        //console.log('redes sociales del usuario:', redesSociales)
         res.status(200).json(redesSociales);
     } catch (error) {
         console.error(error);

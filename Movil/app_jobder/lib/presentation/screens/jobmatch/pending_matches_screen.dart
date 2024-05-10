@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_jobder/config/helpers/crud_match.dart';
 import 'package:app_jobder/config/helpers/location_service.dart';
@@ -24,25 +25,49 @@ class _PendingMatchesScreenState extends State<PendingMatchesScreen> {
   }
 
   Future<void> _fetchMatches() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String userId = prefs.getString('usuario_id') ?? '';
-      int userIdInt = int.tryParse(userId) ?? 0;
-
-      List<UserMatch> fetchedMatches = await MatchRepository().obtenerMatches(userIdInt);
-      setState(() {
-        // Eliminar el usuario aprobado de la lista de matches
-        matches = fetchedMatches;
-        _isLoading = false;
-      });
-    } catch (error) {
-      print('Error al obtener matches: $error');
+  try {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userId = prefs.getString('usuario_id') ?? '';
+    int userIdInt = int.tryParse(userId) ?? 0;
+    String token = prefs.getString('auth_token') ?? '';
+    List<UserMatch> fetchedMatches = await MatchRepository().obtenerMatches(userIdInt, token);
+    setState(() {
+      matches = fetchedMatches;
+      _isLoading = false;
+    });
+  } catch (error) {
+    print('Error al obtener matches: $error');
+    if (error.toString().contains('Token de autenticación inválido o expirado')) {
+      // Mostrar diálogo de alerta
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Sesión Caducada'),
+            content: Text('Tu sesión ha caducado. Por favor, inicia sesión nuevamente.'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  // Eliminar el token auth_token de SharedPreferences
+                  SharedPreferences.getInstance().then((prefs) => prefs.remove('auth_token'));
+                  // Cerrar el diálogo
+                  Navigator.of(context).pop();
+                  // Redirigir al usuario a la pantalla de inicio de sesión
+                  context.go('/');
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
       setState(() {
         _isLoading = false;
       });
     }
   }
-
+}
   Future<String> _getCityName(double latitude, double longitude) async {
     try {
       String cityName = await LocationService.getCityName(latitude, longitude);
@@ -166,7 +191,7 @@ class _PendingMatchesScreenState extends State<PendingMatchesScreen> {
                   itemCount: matches.length,
                   itemBuilder: (context, index) {
                     final UserMatch match = matches[index];
-                    final usuario2 = match.usuario2;
+                    final usuario2 = match.usuario1;
 
                     return FutureBuilder(
                       future: _getCityName(usuario2.latitud ?? 0.0, usuario2.longitud ?? 0.0),

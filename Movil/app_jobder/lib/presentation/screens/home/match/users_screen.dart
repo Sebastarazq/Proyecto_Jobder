@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'package:app_jobder/config/helpers/crud_match.dart';
 import 'package:app_jobder/config/helpers/location_service.dart';
 import 'package:app_jobder/config/helpers/permiso_location.dart';
@@ -33,12 +32,14 @@ class _UsersScreenState extends State<UsersScreen> {
   bool _hasExitedWithoutGrantingPermission = false;
   List<int> _usersWithMatch = []; // Lista para almacenar los IDs de los usuarios con match creado
   List<int> _rejectedUsers = []; // Lista para almacenar los IDs de los usuarios rechazados
+  String _selectedFilter = 'Categorías'; // Variable para almacenar el filtro seleccionado
+
 
   @override
   void initState() {
     super.initState();
     _checkAndRequestLocationPermission();
-    _getUsuariosCercanos(); // Llama a la función para obtener usuarios cercanos al iniciar la pantalla
+    _getUsuarios();
   }
 
   void _handleCreateMatch(int userId) {
@@ -160,6 +161,58 @@ class _UsersScreenState extends State<UsersScreen> {
     }
   }
 
+  void _getUsuariosCategorias() async {
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? userId = prefs.getString('usuario_id');
+      userIdInt = int.tryParse(userId ?? '') ?? 0; // Asigna userIdInt con un valor predeterminado de 0 si userId es nulo o no se puede convertir a int
+      print('User ID: $userIdInt');
+      if (userIdInt != 0) {
+        // Llama a una función del repositorio para obtener usuarios por categoría
+        List<UsuarioCercano> usuariosCategorias = await matchRepository.getUsuariosCategorias(userIdInt);
+        // Procesa los usuarios obtenidos de manera similar a como lo haces en _getUsuariosCercanos
+        setState(() {
+          _users = usuariosCategorias.map((usuario) {
+            // Filtra los usuarios que ya tienen un match creado o fueron rechazados
+            if (_usersWithMatch.contains(usuario.usuarioId) || _rejectedUsers.contains(usuario.usuarioId)) {
+              return null; // Omite este usuario
+            }
+            print('usuario_id: ${usuario.usuarioId}');
+            print('Usuario: ${usuario.nombre}');
+            print('Foto de perfil: ${usuario.fotoPerfil}');
+            print('Descripción: ${usuario.descripcion}');
+            return usuario.toUserData();
+          }).whereType<UserData>().toList();
+        });
+      } else {
+        print('Error: userId no es un entero válido.');
+      }
+    } catch (error) {
+      // Captura cualquier excepción ocurrida y muestra un mensaje apropiado
+      setState(() {
+        _users = []; // Vacía la lista de usuarios para evitar el error
+      });
+      print('Error al obtener usuarios por categoría: $error');
+    }
+  }
+
+  void _getUsuarios() async {
+    // Limpiar las listas _usersWithMatch y _rejectedUsers
+    setState(() {
+      _usersWithMatch.clear();
+      _rejectedUsers.clear();
+    });
+
+    if (_selectedFilter == 'Categorías') {
+      // Llama a la función para obtener usuarios por categorías
+      _getUsuariosCategorias();
+    } else {
+      // Llama a la función para obtener usuarios cercanos
+      _getUsuariosCercanos();
+    }
+  }
+
+
  @override
 Widget build(BuildContext context) {
   if (!_hasLocationPermission || _hasExitedWithoutGrantingPermission) {
@@ -185,65 +238,89 @@ Widget build(BuildContext context) {
   final bool isControllerAvailable = mounted;
 
   return Scaffold(
-    appBar: AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      title: const Row(
-        children: [
-          Icon(Icons.work),
-          SizedBox(width: 8),
-          Text('Jobder'),
-        ],
+  appBar: AppBar(
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    title: Row(
+      children: [
+        Icon(Icons.work),
+        SizedBox(width: 8),
+        Text('Jobder'),
+      ],
+    ),
+    actions: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: _selectedFilter,
+              iconSize: 24,
+              icon: Icon(Icons.arrow_drop_down),
+              onChanged: (newValue) {
+                setState(() {
+                  _selectedFilter = newValue!;
+                });
+                _getUsuarios(); // Llama a la función para obtener usuarios según el nuevo filtro seleccionado
+              },
+              items: <String>['Categorías', 'Usuarios Cercanos'].map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+      ],
+    ),
+  extendBodyBehindAppBar: true,
+  body: Container(
+    decoration: BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFEE805F), Color(0xFF096BFF)],
       ),
     ),
-    extendBodyBehindAppBar: true,
-    body: Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFEE805F), Color(0xFF096BFF)],
-        ),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            if (_users.isNotEmpty)
-              Expanded(
-                child: CardSwiper(
-                  controller: controller,
-                  cardsCount: _users.length,
-                  numberOfCardsDisplayed: _users.length == 1 ? 1 : 2,
-                  cardBuilder: (context, index, percentX, percentY) {
-                    try {
-                      final user = _users[index];
-                      return UserCard(
-                        user: user,
-                        userIdInt: userIdInt,
-                        controller: controller,
-                        onSwipeLeft: () {
-                          if (isControllerAvailable) {
-                            controller.swipe(CardSwiperDirection.left);
-                          }
-                        },
-                        onSwipeRight: () {
-                          if (isControllerAvailable) {
-                            controller.swipe(CardSwiperDirection.right);
-                          }
-                        },
-                        habilidades: _usuarioHabilidades,
-                        onCreateMatch: _handleCreateMatch, // Pasa el método callback
-                        onRejectUser: _handleRejectUser, // Pasa el método callback
-                      );
-                    } catch (e) {
-                      // Maneja la excepción de manera adecuada
-                      print('Error al construir la tarjeta del usuario: $e');
-                      return Container(); // Puedes retornar un contenedor vacío u otro widget según lo necesites
-                    }
-                  },
-                )
+    child: SafeArea(
+      child: Column(
+        children: [
+          if (_users.isNotEmpty)
+            Expanded(
+              child: CardSwiper(
+                controller: controller,
+                cardsCount: _users.length,
+                numberOfCardsDisplayed: _users.length == 1 ? 1 : 2,
+                cardBuilder: (context, index, percentX, percentY) {
+                  try {
+                    final user = _users[index];
+                    return UserCard(
+                      user: user,
+                      userIdInt: userIdInt,
+                      controller: controller,
+                      onSwipeLeft: () {
+                        if (isControllerAvailable) {
+                          controller.swipe(CardSwiperDirection.left);
+                        }
+                      },
+                      onSwipeRight: () {
+                        if (isControllerAvailable) {
+                          controller.swipe(CardSwiperDirection.right);
+                        }
+                      },
+                      habilidades: _usuarioHabilidades,
+                      onCreateMatch: _handleCreateMatch, // Pasa el método callback
+                      onRejectUser: _handleRejectUser, // Pasa el método callback
+                    );
+                  } catch (e) {
+                    // Maneja la excepción de manera adecuada
+                    print('Error al construir la tarjeta del usuario: $e');
+                    return Container(); // Puedes retornar un contenedor vacío u otro widget según lo necesites
+                  }
+                },
               ),
-           if (_users.isEmpty)
+            ),
+          if (_users.isEmpty)
             Expanded(
               child: Center(
                 child: Column(
@@ -275,12 +352,12 @@ Widget build(BuildContext context) {
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     ),
-    bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),
-  );
+  ),
+  bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),
+);
 }
 }
 
@@ -440,20 +517,33 @@ class UserCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             const Icon(Icons.location_on, size: 17, color: Colors.black87),
                             const SizedBox(width: 5),
-                            Expanded(
+                            SizedBox(
+                              height: 17,
                               child: FutureBuilder<String>(
                                 future: LocationService.getCityName(
-                                  double.parse(user.latitud), // Convertir la latitud de String a double
-                                  double.parse(user.longitud), // Convertir la longitud de String a double
+                                  double.parse(user.latitud),
+                                  double.parse(user.longitud),
                                 ),
                                 builder: (context, snapshot) {
                                   if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return const CircularProgressIndicator();
+                                    return const SizedBox(
+                                      width: 17,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    );
                                   } else if (snapshot.hasError) {
-                                    return Text('Error: ${snapshot.error}');
+                                    return const Text(
+                                      'Error',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 16,
+                                      ),
+                                    );
                                   } else {
                                     return Text(
                                       'Ciudad: ${snapshot.data ?? 'No disponible'}',

@@ -111,6 +111,83 @@ class UserRepository {
     }
   }
 
+  Future<void> loginVerificarHuella(UsuarioLogin user) async {
+    try {
+      // Realizar la solicitud para iniciar sesión
+      final response = await _dio.post(
+        'http://192.168.1.5:3000/api/v1/users/loginverificarhuella',
+        data: user.toJson(), // Convertir el objeto UsuarioLogin a JSON
+      );
+
+      // Extraer los datos de usuario y token del servidor
+      final int usuarioId = response.data['usuario_id'];
+      final String token = response.data['token'];
+
+      // Generar la fecha de expiración del token (7 días)
+      final DateTime expirationDate = DateTime.now().add(const Duration(days: 7));
+      final String formattedExpirationDate = DateFormat('yyyy-MM-dd').format(expirationDate);
+
+      // Guardar el token largo y la fecha de expiración en SharedPreferences
+      await _saveTokenLargo(token, formattedExpirationDate);
+
+      // Guardar el usuario ID en SharedPreferences
+      await _saveid(usuarioId);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 400) {
+        throw Exception('Correo electrónico/celular y contraseña son obligatorios');
+      } else if (error.response?.statusCode == 401) {
+        final String message = error.response?.data['message'];
+        if (message == 'Correo electrónico/celular o contraseña incorrectos') {
+          throw Exception('Correo electrónico/celular o contraseña incorrectos');
+        } else if (message == 'La cuenta no existe') {
+          throw Exception('La cuenta no existe');
+        } else if (message == 'La cuenta no está confirmada') {
+          throw Exception('La cuenta no está confirmada');
+        } else {
+          throw Exception('Credenciales inválidas. Por favor, verifica tu correo electrónico y contraseña.');
+        }
+      } else {
+        throw Exception('Error al iniciar sesión: ${error.message}');
+      }
+    } catch (error) {
+      throw Exception('Error al iniciar sesión: $error');
+    }
+  }
+
+  Future<void> loginHuella(String token) async {
+    try {
+      // Realizar la solicitud para iniciar sesión con huella dactilar
+      final response = await _dio.post(
+        'http://192.168.1.5:3000/api/v1/users/loginhuella/$token',
+      );
+
+      // Extraer los datos de usuario y token del servidor
+      final int usuarioId = response.data['usuario_id'];
+      final String nuevoToken = response.data['token'];
+
+      // Generar la fecha de expiración del token (7 días)
+      final DateTime expirationDate = DateTime.now().add(const Duration(days: 7));
+      final String formattedExpirationDate = DateFormat('yyyy-MM-dd').format(expirationDate);
+
+      // Guardar el nuevo token en SharedPreferences
+      // Almacenar el token y la fecha de expiración en SharedPreferences
+      await _saveToken(nuevoToken, formattedExpirationDate);
+
+      // Guardar el usuario ID en SharedPreferences
+      await _saveid(usuarioId);
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 400) {
+        throw Exception('Error de solicitud');
+      } else if (error.response?.statusCode == 401) {
+        throw Exception('Token inválido');
+      } else {
+        throw Exception('Error al iniciar sesión: ${error.message}');
+      }
+    } catch (error) {
+      throw Exception('Error al iniciar sesión: $error');
+    }
+  }
+
   Future<void> sendPasswordResetCode(String email) async {
     try {
       final response = await _dio.post(
@@ -268,6 +345,11 @@ class UserRepository {
   Future<void> _saveToken(String token, String expirationDate) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_token', token);
+    await prefs.setString('token_expiration', expirationDate);
+  }
+  Future<void> _saveTokenLargo(String token, String expirationDate) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_token_largo', token);
     await prefs.setString('token_expiration', expirationDate);
   }
   Future<void> _saveid(int usuarioId) async {

@@ -3,6 +3,10 @@ import 'package:app_jobder/infraestructure/model/user_model.dart';
 import 'package:app_jobder/presentation/screens/login/recuperarcuenta_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:app_jobder/config/providers/biometric_provider.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   static const String name = 'login_screen';
@@ -20,6 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool biometricEnabled = Provider.of<BiometricAuthModel>(context).biometricEnabled;
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -68,13 +74,56 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             const SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _isUsingEmail = !_isUsingEmail; // Cambiar entre email y celular
-                });
-              },
-              child: Text(_isUsingEmail ? 'Iniciar sesión con celular' : 'Iniciar sesión con email'),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _isUsingEmail = !_isUsingEmail; // Cambiar entre email y celular
+                    });
+                  },
+                  child: Text(_isUsingEmail ? 'Iniciar sesión con celular' : 'Iniciar sesión con email'),
+                ),
+                const SizedBox(width: 20),
+                if (biometricEnabled) // Mostrar el botón de huella dactilar si está habilitado
+                  GestureDetector(
+                    onTap: () async {
+                      final LocalAuthentication auth = LocalAuthentication();
+                      bool authenticated = false;
+                      try {
+                        authenticated = await auth.authenticate(
+                          localizedReason: 'Coloca tu huella para iniciar sesión en Jobder',
+                        );
+                        if (authenticated) {
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          String token = prefs.getString('auth_token_largo') ?? '';
+                          UserRepository userRepository = UserRepository();
+                          await userRepository.loginHuella(token);
+                          GoRouter.of(context).go('/home');
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error en la autenticación con huella: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey, // Color del fondo del botón de huella dactilar
+                      ),
+                      child: const Icon(
+                        Icons.fingerprint,
+                        size: 30,
+                        color: Colors.white, // Color del icono de huella dactilar
+                      ),
+                    ),
+                  ),
+              ],
             ),
             TextButton(
               onPressed: () {

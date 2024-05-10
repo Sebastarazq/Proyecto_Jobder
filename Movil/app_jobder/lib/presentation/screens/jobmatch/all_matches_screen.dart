@@ -120,7 +120,7 @@ class _AllMatchesScreenState extends State<AllMatchesScreen> {
                   itemCount: matches.length,
                   itemBuilder: (context, index) {
                     final UserMatch match = matches[index];
-                    final usuario2 = match.usuario2;
+                    final usuario2 = match.usuario1;
 
                     return FutureBuilder(
                       future: _getCityName(usuario2.latitud ?? 0.0, usuario2.longitud ?? 0.0),

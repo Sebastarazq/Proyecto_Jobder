@@ -1,6 +1,7 @@
 import Usuario from '../models/Usuario.js';
 import { hashPassword, comparePasswords } from '../helpers/hash.js';
 import { Op } from 'sequelize';
+import { generarJWT } from '../helpers/tokens.js';
 
 const getAllUsers = async () => {
   try {
@@ -85,7 +86,7 @@ const loginByEmail = async (email, password) => {
   try {
     const user = await Usuario.findOne({ 
       where: { email }, 
-      attributes: ['usuario_id', 'nombre', 'password', 'confirmado'] // Ajusta 'id' por 'usuario_id'
+      attributes: ['usuario_id', 'nombre', 'password', 'confirmado', 'email'] // Ajusta 'id' por 'usuario_id'
     });
     if (!user) {
       throw new Error('La cuenta no existe');
@@ -98,7 +99,7 @@ const loginByEmail = async (email, password) => {
       throw new Error('La cuenta no está confirmada');
     }
     // Devuelve solo las propiedades usuario_id y nombre del usuario
-    return { usuario_id: user.usuario_id, nombre: user.nombre };
+    return { usuario_id: user.usuario_id, email: user.email };
   } catch (error) {
     throw error;
   }
@@ -108,7 +109,7 @@ const loginByCellphone = async (celular, password) => {
   try {
     const user = await Usuario.findOne({ 
       where: { celular }, 
-      attributes: ['usuario_id', 'nombre', 'password', 'confirmado'] // Ajusta 'id' por 'usuario_id'
+      attributes: ['usuario_id', 'nombre', 'password', 'confirmado', 'email'] // Ajusta 'id' por 'usuario_id'
     });
     if (!user) {
       throw new Error('La cuenta no existe');
@@ -121,7 +122,7 @@ const loginByCellphone = async (celular, password) => {
       throw new Error('La cuenta no está confirmada');
     }
     // Devuelve solo las propiedades usuario_id y nombre del usuario
-    return { usuario_id: user.usuario_id, nombre: user.nombre };
+    return { usuario_id: user.usuario_id, email: user.email };
   } catch (error) {
     throw error;
   }
@@ -246,6 +247,21 @@ const updateProfileImage = async (userId, imageUrl) => {
   }
 };
 
+const verificarUsuarioYGenerarToken = async (userId) => {
+  try {
+    // Buscar el usuario por su ID
+    const user = await Usuario.findByPk(userId);
+    if (!user) {
+      throw new Error('El usuario con el ID proporcionado no existe');
+    }
+
+    // Devolver la información del usuario
+    return user;
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 
 export default {
@@ -261,5 +277,6 @@ export default {
   savePasswordResetCode,
   verifyResetCodeAndGetUserId,
   updatePassword,
-  updateProfileImage
+  updateProfileImage,
+  verificarUsuarioYGenerarToken
 };

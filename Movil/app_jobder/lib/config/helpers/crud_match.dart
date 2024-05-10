@@ -3,7 +3,11 @@ import 'package:app_jobder/domain/entities/usuario_cercano.dart';
 import 'package:dio/dio.dart';
 
 class MatchRepository {
-  final Dio _dio = Dio();
+  final Dio _dio = Dio(
+      BaseOptions(
+    validateStatus: (status) => status != 401, // Configurar para no lanzar excepción en caso de 401
+  ),
+);
 
   Future<List<UsuarioCercano>> getUsuariosCercanos(int usuarioId) async {
     try {
@@ -24,27 +28,56 @@ class MatchRepository {
     }
   }
 
-  Future<List<UserMatch>> obtenerMatches(int usuarioId) async {
+  Future<List<UsuarioCercano>> getUsuariosCategorias(int usuarioId) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/match/matches',
+        'http://192.168.1.5:3000/api/v1/match/categorias',
         data: {
           'usuario_id': usuarioId,
         },
       );
       if (response.statusCode == 200) {
-        final List<dynamic> matchesJson = response.data['matches'];
-        List<UserMatch> matches = matchesJson.map((json) => UserMatch.fromJson(json)).toList();
-        return matches;
-      } else if (response.statusCode == 404) {
-        throw Exception('No tienes matches');
+        final List<dynamic> usuariosJson = response.data['usuariosCercanos'];
+        return usuariosJson.map((json) => UsuarioCercano.fromJson(json)).toList();
       } else {
-        throw Exception('Error al obtener matches: ${response.data['error']}');
+        throw Exception('Error al obtener usuarios por categorías: ${response.data['error']}');
       }
     } catch (error) {
-      throw Exception('Error al obtener matches: $error');
+      throw Exception('Error al obtener usuarios por categorías: $error');
     }
   }
+
+  Future<List<UserMatch>> obtenerMatches(int usuarioId, String token) async {
+  try {
+    final response = await _dio.post(
+      'http://192.168.1.5:3000/api/v1/match/matches',
+      data: {
+        'usuario_id': usuarioId,
+        'token': token,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> matchesJson = response.data['matches'];
+      List<UserMatch> matches = matchesJson.map((json) => UserMatch.fromJson(json)).toList();
+      return matches;
+    } else if (response.statusCode == 404) {
+      throw Exception('No tienes matches');
+    } else {
+      // Si el servidor responde con un código de estado diferente a 200 o 404,
+      // lanzamos una excepción genérica con el mensaje de error del servidor
+      final errorMessage = response.data['message'] ?? 'Error del servidor';
+      throw Exception(errorMessage);
+    }
+  } on DioException catch (e) {
+    // Si se produce una excepción de DioError
+    if (e.response?.statusCode == 401) {
+      throw Exception('Token de autenticación inválido o expirado');
+    } else {
+      throw Exception('Error al obtener matches: ${e.message}');
+    }
+  }
+}
 
   Future<List<UserMatch>> obtenerMatchesCompletados(int usuarioId) async {
     try {
@@ -68,14 +101,14 @@ class MatchRepository {
     }
   }
 
-  Future<String> crearMatch(int usuarioId1, int usuarioId2, bool visto2) async {
+  Future<String> crearMatch(int usuarioId1, int usuarioId2, bool visto1) async {
       try {
         final response = await _dio.post(
           'http://192.168.1.5:3000/api/v1/match/crear-match',
           data: {
             'usuarioId1': usuarioId1,
             'usuarioId2': usuarioId2,
-            'visto2': visto2,
+            'visto1': visto1,
           },
         );
         if (response.statusCode == 201) {

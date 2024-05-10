@@ -26,6 +26,10 @@ const Match = db.define('Matches', {
   fecha_match: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW
+  },
+  creado_por: {
+    type: DataTypes.INTEGER, // Puedes ajustar este tipo de datos según tus necesidades
+    allowNull: false // Opcional, dependiendo de tus requisitos
   }
 },{
     timestamps: false

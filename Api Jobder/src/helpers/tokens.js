@@ -2,7 +2,12 @@ import jwt from 'jsonwebtoken';
 
 const generarJWT = datos => {
     console.log('Datos para generar el token:', datos);
-    return jwt.sign({ id: datos.id, nombre: datos.nombre }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    return jwt.sign({ id: datos.id, email: datos.email }, process.env.JWT_SECRET, { expiresIn: '4m' });
+};
+
+const generarJWTlargo = datos => {
+    console.log('Datos para generar el token:', datos);
+    return jwt.sign({ id: datos.id, email: datos.email }, process.env.JWT_SECRET, { expiresIn: '90d' });
 };
 
 const generaCodigo = () => {
@@ -19,8 +24,20 @@ const decodificarJWT = token => {
     }
 };
 
+const verificarJWT = token => {
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        return decoded;
+    } catch (error) {
+        throw new Error('Token de autenticación inválido');
+    }
+};
+
 export {
     generarJWT,
     generaCodigo,
-    decodificarJWT
+    decodificarJWT,
+    generarJWTlargo,
+    verificarJWT
+
 };

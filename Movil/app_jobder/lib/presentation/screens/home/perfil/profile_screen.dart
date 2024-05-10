@@ -2,6 +2,7 @@ import 'package:app_jobder/config/helpers/crud_habilidades.dart';
 import 'package:app_jobder/config/helpers/crud_red_social.dart';
 import 'package:app_jobder/domain/entities/habilidad.dart';
 import 'package:app_jobder/domain/entities/red_social.dart';
+import 'package:app_jobder/presentation/screens/home/perfil/biometric_auth.dart';
 import 'package:app_jobder/presentation/screens/home/perfil/edit_profile_habilidades.dart';
 import 'package:app_jobder/presentation/screens/home/perfil/edit_profile_red_social.dart';
 import 'package:app_jobder/presentation/screens/shared/widgets/redes_sociales_widget.dart';
@@ -262,6 +263,24 @@ String _formatHabilidades(List<Habilidad>? habilidades) {
                           foregroundColor: Colors.white,
                         ),
                         child: const Text('Editar habilidades'),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => BiometricSetupScreen()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.all(15),
+                          backgroundColor: const Color(0xFF096BFF),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Habilitar Huella'),
                       ),
                     ),
                     const SizedBox(height: 20),
