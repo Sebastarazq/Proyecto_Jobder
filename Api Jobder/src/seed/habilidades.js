@@ -1,0 +1,31 @@
+const habilidades = [
+    { nombre: 'Frontend' },
+    { nombre: 'Backend' },
+    { nombre: 'CSS' },
+    { nombre: 'HTML' },
+    { nombre: 'JavaScript' },
+    { nombre: 'React.js' },
+    { nombre: 'Angular' },
+    { nombre: 'Next.js' },
+    { nombre: 'Express' },
+    { nombre: 'SQL' },
+    { nombre: 'Base de datos' },
+    { nombre: 'Linux' },
+    { nombre: 'Redes' },
+    { nombre: 'Node.js' },
+    { nombre: 'Python' },
+    { nombre: 'App movil' },
+    { nombre: 'Vue.js' },
+    { nombre: 'Kotlin' },
+    { nombre: 'Java' },
+    { nombre: 'Flutter' },
+    { nombre: 'Git' },
+    { nombre: 'Scrum' },
+    { nombre: 'GitHub' },
+    { nombre: 'Bootstrap' },
+    { nombre: 'MongoDB' },
+    { nombre: 'Firebase' },
+    { nombre: '.NET' }
+];
+
+export default habilidades;

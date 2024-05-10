@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "db:importar": "node ./src/seed/seeder.js -i",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
