@@ -12,8 +12,8 @@ const options = {
     },
     servers: [
       {
-        url: 'http://localhost:3000', // Actualiza la URL base según tu configuración
-        description: 'Servidor de desarrollo',
+        url: 'https://api-appjobder.azurewebsites.net/', // Actualiza la URL base según tu configuración
+        description: 'Servidor de Implementación',
       },
     ],
   },

@@ -3,8 +3,8 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '.env' });
 
 
-const db = new Sequelize(process.env.DATABASE, process.env.USER, process.env.PASSWORD, {
-    host: process.env.DB_HOST,
+const db = new Sequelize(process.env.DATABASE_AZURE, process.env.USER_AZURE, process.env.PASSWORD_AZURE, {
+    host: process.env.DB_HOST_AZURE,
     port: '3306',
     dialect: 'mysql',
     define: {

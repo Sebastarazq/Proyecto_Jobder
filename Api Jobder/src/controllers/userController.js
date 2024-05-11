@@ -392,7 +392,7 @@ const uploadImage = async (req, res) => {
     console.log(req.file);
 
     // Guarda la URL de la imagen en la base de datos
-    const imageUrl = `http://192.168.6.189:3000/uploads/${req.file.filename}`;
+    const imageUrl = `https://api-appjobder.azurewebsites.net/uploads/${req.file.filename}`;
 
     // Obtén el ID de usuario de los parámetros de la URL
     const userId = req.params.id;

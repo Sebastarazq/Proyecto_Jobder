@@ -6,7 +6,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /habilidades/all:
+ * /api/v1/habilidades/all:
  *   get:
  *     summary: Obtener todas las habilidades.
  *     description: Obtiene la lista de todas las habilidades disponibles.

@@ -15,8 +15,7 @@ const router = express.Router();
  *       500:
  *         description: Error al obtener la lista de usuarios.
  */
-// Ruta para obtener todos los usuarios
-router.get('/all',userController.getAllUsers);
+router.get('/all',userController.getAllUsers);// Ruta para obtener todos los usuarios
 
 /**
  * @swagger
@@ -313,7 +312,7 @@ router.post('/password/reset/confirm/:token', userController.resetPassword);
 
 /**
  * @swagger
- * /infouser/token:
+ * /api/v1/users/infouser/token:
  *   post:
  *     summary: Obtener la información del usuario por token.
  *     description: Obtiene la información del usuario utilizando el token proporcionado.
@@ -339,11 +338,95 @@ router.post('/password/reset/confirm/:token', userController.resetPassword);
  */
 router.post('/infouser/token', userController.obtenerInfoUsuarioPorToken);// Ruta para obtener la información del usuario por token
 
-// Ruta para subir imágenes utilizando Multer
-router.post('/perfilimg/:id/upload', upload.single('image'), userController.uploadImage);
+/**
+ * @swagger
+ * /api/v1/users/perfilimg/{id}/upload:
+ *   post:
+ *     summary: Subir imagen de perfil.
+ *     description: Sube una imagen de perfil para un usuario específico.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID del usuario.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen de perfil a subir.
+ *     responses:
+ *       '200':
+ *         description: Imagen de perfil subida exitosamente.
+ *       '400':
+ *         description: No se proporcionó ninguna imagen.
+ *       '500':
+ *         description: Error interno del servidor.
+ */
+router.post('/perfilimg/:id/upload', upload.single('image'), userController.uploadImage); // Ruta para subir imagen de perfil
 
+/**
+ * @swagger
+ * /api/v1/users/loginverificarhuella:
+ *   post:
+ *     summary: Verificar huella digital para iniciar sesión.
+ *     description: Verifica la huella digital del usuario para iniciar sesión.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Correo electrónico del usuario.
+ *               celular:
+ *                 type: string
+ *                 description: Número de celular del usuario.
+ *               password:
+ *                 type: string
+ *                 description: Contraseña del usuario.
+ *     responses:
+ *       '200':
+ *         description: Inicio de sesión exitoso.
+ *       '400':
+ *         description: Correo electrónico/celular y contraseña son obligatorios.
+ *       '401':
+ *         description: Correo electrónico/celular o contraseña incorrectos.
+ *       '500':
+ *         description: Error interno del servidor.
+ */
 router.post('/loginverificarhuella', userController.loginVerificarHuella); // Ruta para verificar huella
 
+/**
+ * @swagger
+ * /api/v1/users/loginhuella/{token}:
+ *   post:
+ *     summary: Iniciar sesión con huella digital.
+ *     description: Inicia sesión utilizando la huella digital del usuario.
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de autenticación del usuario.
+ *     responses:
+ *       '200':
+ *         description: Token válido.
+ *       '400':
+ *         description: Error al verificar el token.
+ *       '500':
+ *         description: Error interno del servidor.
+ */
 router.post('/loginhuella/:token', userController.loginHuella); // Ruta para iniciar sesión con huella
 
 
