@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 
 const generarJWT = datos => {
     console.log('Datos para generar el token:', datos);
-    return jwt.sign({ id: datos.id, email: datos.email }, process.env.JWT_SECRET, { expiresIn: '4m' });
+    return jwt.sign({ id: datos.id, email: datos.email }, process.env.JWT_SECRET, { expiresIn: '10m' });
 };
 
 const generarJWTlargo = datos => {

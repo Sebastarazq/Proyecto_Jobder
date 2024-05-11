@@ -3,7 +3,7 @@ import redesSocialesService from '../services/redesSocialesService.js';
 const getAllRedesSociales = async (req, res) => {
   try {
     const redesSociales = await redesSocialesService.getAllRedesSociales();
-    console.log('todas las redes sociales:', redesSociales)
+    //console.log('todas las redes sociales:', redesSociales)
     res.status(200).json(redesSociales);
   } catch (error) {
     console.error(error);
@@ -54,7 +54,7 @@ const asociarRedesSociales = async (req, res) => {
   const obtenerTodasLasRedesUsuarioRedes = async (req, res) => {
     try {
       const { usuarioId } = req.params;
-      console.log('usuarioId para obtener redes:', usuarioId);
+      //console.log('usuarioId para obtener redes:', usuarioId);
   
       // Llama al servicio para verificar si el usuario existe y obtener sus redes sociales
       const redesSociales = await redesSocialesService.obtenerRedesSocialesUsuario(usuarioId);
@@ -70,11 +70,37 @@ const asociarRedesSociales = async (req, res) => {
       res.status(500).json({ message: 'Error al obtener las redes sociales del usuario' });
     }
   };
+
+  const eliminarRedSocial = async (req, res) => {
+    try {
+      const { redId } = req.params;
+      console.log('redId a eliminar:', redId);
+  
+      // Verificar si el ID de la red social está vacío
+      if (!redId) {
+        return res.status(400).json({ message: 'El ID de la red social es requerido' });
+      }
+      
+      // Llama al servicio para eliminar la red social por su ID
+      const deleted = await redesSocialesService.eliminarRedSocial(redId);
+  
+      if (!deleted) {
+        return res.status(404).json({ message: 'La red social no existe' });
+      }
+  
+      res.status(200).json({ message: 'Red social eliminada correctamente' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error al eliminar la red social' });
+    }
+  };
+  
   
 
 export default {
   getAllRedesSociales,
   asociarRedesSociales,
   getRedesSocialesUsuario,
-  obtenerTodasLasRedesUsuarioRedes
+  obtenerTodasLasRedesUsuarioRedes,
+  eliminarRedSocial
 };

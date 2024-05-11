@@ -1,5 +1,6 @@
 import 'package:app_jobder/config/helpers/crud_red_social.dart';
 import 'package:app_jobder/domain/entities/red_social_basica.dart';
+import 'package:app_jobder/domain/entities/red_social_usuario.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:app_jobder/domain/entities/red_social.dart';
@@ -7,16 +8,23 @@ import 'package:app_jobder/domain/entities/red_social.dart';
 
 class RedSocialFormField extends StatelessWidget {
   final RedSocial redSocial;
+  final int usuarioRedId; // Agregar el usuarioRedId
   final ValueChanged<String> onChanged;
+  final Function(int) onDelete; // Definir el parámetro onDelete de tipo Function(int)
+  final String initialValue; // Definir el parámetro initialValue
 
   const RedSocialFormField({
     Key? key,
     required this.redSocial,
+    required this.usuarioRedId,
     required this.onChanged,
+    required this.onDelete, // Añadir onDelete como un parámetro requerido
+    required this.initialValue, // Añadir initialValue como un parámetro requerido
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    print('Initial value: $initialValue'); // Agregar un print para el valor inicial
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -27,22 +35,35 @@ class RedSocialFormField extends StatelessWidget {
               border: Border.all(color: Colors.grey),
               borderRadius: BorderRadius.circular(8),
             ),
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            child: TextFormField(
-              initialValue: redSocial.nombreUsuarioAplicacion,
-              onChanged: onChanged,
-              decoration: InputDecoration(
-                border: InputBorder.none,
-                labelText: redSocial.nombre,
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: initialValue.isNotEmpty ? initialValue : '', // Usar el parámetro initialValue aquí
+                    onChanged: onChanged,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      labelText: redSocial.nombre,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    onDelete(usuarioRedId); // Llamar a la función onDelete con usuarioRedId como argumento
+                  },
+                ),
+              ],
             ),
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
       ],
     );
   }
 }
+
 
 class RedSocialIcon extends StatelessWidget {
   final String redSocial;
@@ -81,15 +102,28 @@ class EditRedesSocialesScreen extends StatefulWidget {
 }
 
 class _EditRedesSocialesScreenState extends State<EditRedesSocialesScreen> {
-  final RedesSocialesRepository _redesSocialesRepository =
-      RedesSocialesRepository();
-  List<RedSocial> _redesSocialesUsuario = [];
-  List<RedSocial> _todasLasRedesSociales = [];
+  final RedesSocialesRepository _crudRedSocial = RedesSocialesRepository();
+  List<RedSocialUsuario> _redesSocialesUsuario = [];
+  List<RedSocial> _todasLasRedesSociales = []; // Cambiar este tipo a List<RedSocialUsuario>
+  Map<int, int> _redesSocialesUsuarioMap = {}; // Crear un mapa para almacenar el usuarioRedId
 
   @override
   void initState() {
     super.initState();
     _fetchRedesSociales();
+  }
+
+  Future<void> _eliminarRedSocial(int redId) async {
+    try {
+      await _crudRedSocial.eliminarRedSocial(redId); // Llama al método para eliminar la red social
+      // Muestra un diálogo indicando que se eliminó correctamente
+      _mostrarDialog('Red social eliminada correctamente', Colors.green);
+      // Actualiza la lista de redes sociales después de eliminar
+      _fetchRedesSociales();
+    } catch (error) {
+      // Muestra un diálogo de error si no se puede eliminar la red social
+      _mostrarDialog('Ops, algo salió mal. Inténtalo nuevamente.', Colors.red);
+    }
   }
 
   List<Map<String, dynamic>> _prepararDatosParaEnviar() {
@@ -109,55 +143,58 @@ class _EditRedesSocialesScreenState extends State<EditRedesSocialesScreen> {
   }
 
   Future<void> _fetchRedesSociales() async {
-  try {
-    // Consulta todas las redes sociales y crea el formulario con sus campos
-    List<RedSocialBasica> redesSocialesBasica =
-        await _redesSocialesRepository.getAllRedesSociales();
-    _todasLasRedesSociales = redesSocialesBasica
-        .map((redSocialBasica) => RedSocial(
-              redId: redSocialBasica.redId,
-              nombre: redSocialBasica.nombre,
-              nombreUsuarioAplicacion: '',
-            ))
-        .toList();
+    try {
+      // Consulta todas las redes sociales básicas
+      List<RedSocialBasica> redesSocialesBasica = await _crudRedSocial.getAllRedesSociales();
+      
+      // Obtén las redes sociales del usuario
+      _redesSocialesUsuario = await _crudRedSocial.obtenerRedesSocialesUsuarioRedes(widget.userId);
+      
+      // Crea una lista de RedSocial combinando las redes sociales básicas y las del usuario
+      _todasLasRedesSociales = redesSocialesBasica.map((redSocialBasica) {
+        // Busca si hay una instancia de RedSocialUsuario asociada a esta red social
+        RedSocialUsuario? redSocialUsuario = _redesSocialesUsuario.firstWhere(
+          (rsu) => rsu.redId == redSocialBasica.redId,
+          orElse: () => RedSocialUsuario(usuarioRedId: 0, redId: redSocialBasica.redId, nombre: redSocialBasica.nombre, nombreUsuarioAplicacion: ''),
+        );
+        // Crea una instancia de RedSocial con la información combinada
+        return RedSocial(
+          redId: redSocialBasica.redId,
+          nombre: redSocialBasica.nombre,
+          nombreUsuarioAplicacion: redSocialUsuario.nombreUsuarioAplicacion,
+        );
+      }).toList();
+      
+      print('Todas las redes sociales: $_todasLasRedesSociales');
 
-    // Obtén las redes sociales del usuario
-    _redesSocialesUsuario =
-        await _redesSocialesRepository.getRedesSocialesUsuario(widget.userId);
-
-    // Actualiza los valores de nombreUsuarioAplicacion en _todasLasRedesSociales
-    for (var redSocialUsuario in _redesSocialesUsuario) {
-      int index = _todasLasRedesSociales.indexWhere((rs) => rs.redId == redSocialUsuario.redId);
-      if (index != -1) {
-        _todasLasRedesSociales[index] = redSocialUsuario;
+      // Luego de inicializar _todasLasRedesSociales, actualiza el mapa de usuarioRedId
+      for (var redSocialUsuario in _redesSocialesUsuario) {
+        _redesSocialesUsuarioMap[redSocialUsuario.redId] = redSocialUsuario.usuarioRedId;
+        print ('Redes sociales del usuario mapa: $_redesSocialesUsuarioMap');
       }
-    }
 
-    setState(() {});
-  } catch (error) {
+      setState(() {});
+    } catch (error) {
     print('Error al obtener las redes sociales: $error');
+    // Si hay un error al obtener las redes sociales, generar redes sociales básicas con campos vacíos
+    List<RedSocialBasica> redesSocialesBasica = await _crudRedSocial.getAllRedesSociales(); // Definir redesSocialesBasica aquí
+    _todasLasRedesSociales = redesSocialesBasica.map((redSocialBasica) {
+      return RedSocial(
+        redId: redSocialBasica.redId,
+        nombre: redSocialBasica.nombre,
+        nombreUsuarioAplicacion: '', // Campo vacío
+      );
+    }).toList();
+    setState(() {});
   }
 }
 
-  Future<void> _fetchRedesSocialesUsuario() async {
-    try {
-      _redesSocialesUsuario =
-          await _redesSocialesRepository.getRedesSocialesUsuario(widget.userId);
-
-      setState(() {
-        _todasLasRedesSociales = _redesSocialesUsuario;
-      });
-    } catch (error) {
-      print('Error al obtener las redes sociales del usuario: $error');
-    }
-  }
-
-   void _mostrarDialog(String mensaje, Color colorFondo) {
+  void _mostrarDialog(String mensaje, Color colorFondo) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Mensaje'),
+          title: const Text('Mensaje'),
           content: Text(mensaje),
           actions: <Widget>[
             TextButton(
@@ -165,26 +202,24 @@ class _EditRedesSocialesScreenState extends State<EditRedesSocialesScreen> {
                 Navigator.of(context).pop();
                 Navigator.of(context).pop(true); 
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
       },
     );
   }
-  
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Editar Redes Sociales'),
+        title: const Text('Editar Redes Sociales'),
       ),
       body: Padding(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         child: _todasLasRedesSociales.isEmpty
-            ? Center(
+            ? const Center(
                 child: CircularProgressIndicator(),
               )
             : Column(
@@ -192,21 +227,25 @@ class _EditRedesSocialesScreenState extends State<EditRedesSocialesScreen> {
                   for (var redSocial in _todasLasRedesSociales)
                     RedSocialFormField(
                       redSocial: redSocial,
+                      usuarioRedId: _redesSocialesUsuarioMap[redSocial.redId] ?? 0,
                       onChanged: (value) {
                         setState(() {
                           int index = _todasLasRedesSociales.indexOf(redSocial);
                           _todasLasRedesSociales[index] = redSocial.copyWith(nombreUsuarioAplicacion: value);
                         });
                       },
+                      onDelete: (usuarioRedId) {
+                        _eliminarRedSocial(usuarioRedId); // Llama a la función para eliminar la red social
+                      },
+                      initialValue: redSocial.nombreUsuarioAplicacion.toString(),
                     ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
                       final datosParaEnviar = _prepararDatosParaEnviar();
                       if (datosParaEnviar.isNotEmpty) {
                         try {
-                          await _redesSocialesRepository
-                              .asociarRedesSociales(datosParaEnviar);
+                          await _crudRedSocial.asociarRedesSociales(datosParaEnviar);
                           _mostrarDialog(
                               'Tus redes sociales se han actualizado correctamente',
                               Colors.green);

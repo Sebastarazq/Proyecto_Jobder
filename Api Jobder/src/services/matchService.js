@@ -126,6 +126,21 @@ const encontrarUsuariosPorCategorias = async (usuarioId) => {
           },
           {
             model: Match,
+            as: 'Matches1', // Asigna un alias a la asociación con Match
+            where: {
+              [Op.or]: [
+                { usuario1_id: usuarioId },
+                { usuario2_id: usuarioId }
+              ],
+              [Op.or]: [
+                { visto1: false },
+                { visto2: false }
+              ]
+            },
+            required: false
+          },
+          {
+            model: Match,
             as: 'Matches2', // Asigna un alias a la asociación con Match
             where: {
               [Op.or]: [
@@ -141,14 +156,20 @@ const encontrarUsuariosPorCategorias = async (usuarioId) => {
           }
         ]
       });
+      //console.log('Usuarios por categorías (Empresario):', usuariosPorCategorias); // Agregar este console.log
     } else {
       throw new Error('Categoría de usuario no válida');
     }
 
     // Filtrar los usuarios para eliminar aquellos con Matches con vistos true
-const usuariosSinVistosTrue = usuariosPorCategorias.filter(usuarioCercano => {
-  return !usuarioCercano.Matches1.some(match => match.visto1 || match.visto2);
-});
+  const usuariosSinVistosTrue = usuariosPorCategorias.filter(usuario => {
+    if (usuario.Matches1 && usuario.Matches1.length > 0) {
+      return !usuario.Matches1.some(match => match.visto1 || match.visto2);
+    } else if (usuario.Matches2 && usuario.Matches2.length > 0) {
+      return !usuario.Matches2.some(match => match.visto1 || match.visto2);
+    }
+    return true; // Si no hay Matches, mantener el usuario
+  });
 
     return usuariosSinVistosTrue;
   } catch (error) {

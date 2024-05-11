@@ -70,41 +70,62 @@ const getRedesSocialesUsuario = async (usuarioId) => {
 
   const obtenerRedesSocialesUsuario = async (usuarioId) => {
     try {
-      // Verificar si el usuario existe
-      const usuario = await Usuario.findByPk(usuarioId);
-      if (!usuario) {
-        return { message: 'El usuario no existe.' };
+        // Verificar si el usuario existe
+        const usuario = await Usuario.findByPk(usuarioId);
+        if (!usuario) {
+            return { message: 'El usuario no existe.' };
+        }
+
+        // Consulta para obtener las redes sociales del usuario por su ID
+        const redesSocialesUsuario = await UsuariosRedesSociales.findAll({
+            where: { usuario_id: usuarioId }
+        });
+
+        if (redesSocialesUsuario.length === 0) {
+            // Si el usuario no tiene ninguna red social vinculada, devolver un mensaje específico
+            return { message: 'El usuario no tiene ninguna red social vinculada.' };
+        }
+
+        // Obtener los IDs de las redes sociales del usuario
+        const idsRedesSociales = redesSocialesUsuario.map(red => red.red_id);
+
+        // Consulta para obtener los nombres de las redes sociales utilizando los IDs obtenidos
+        const nombresRedesSociales = await RedSocial.findAll({
+            where: { red_id: idsRedesSociales }
+        });
+
+        // Mapear los nombres de las redes sociales
+        const redesSociales = nombresRedesSociales.map(red => {
+            const redSocial = redesSocialesUsuario.find(r => r.red_id === red.red_id);
+            return {
+                usuario_red_id: redSocial.usuario_red_id, // Agregar usuario_red_id
+                red_id: red.red_id,
+                nombre: red.nombre,
+                nombreUsuarioAplicacion: redSocial.nombre_usuario_aplicacion
+            };
+        });
+
+        return redesSociales;
+    } catch (error) {
+        throw error;
+    }
+  };
+  const eliminarRedSocial = async (redId) => {
+    try {
+      // Verificar si el ID de la red social está vacío
+      if (!redId) {
+        throw new Error('El ID de la red social es requerido');
+      }
+      // Verificar si la red social existe antes de eliminarla
+      const redSocial = await UsuariosRedesSociales.findByPk(redId);
+      if (!redSocial) {
+        return false; // La red social no existe
       }
   
-      // Consulta para obtener las redes sociales del usuario por su ID
-      const redesSocialesUsuario = await UsuariosRedesSociales.findAll({
-        where: { usuario_id: usuarioId }
-      });
+      // Eliminar la red social por su ID
+      await UsuariosRedesSociales.destroy({ where: { usuario_red_id: redId } });
   
-      if (redesSocialesUsuario.length === 0) {
-        // Si el usuario no tiene ninguna red social vinculada, devolver un mensaje específico
-        return { message: 'El usuario no tiene ninguna red social vinculada.' };
-      }
-  
-      // Obtener los IDs de las redes sociales del usuario
-      const idsRedesSociales = redesSocialesUsuario.map(red => red.red_id);
-  
-      // Consulta para obtener los nombres de las redes sociales utilizando los IDs obtenidos
-      const nombresRedesSociales = await RedSocial.findAll({
-        where: { red_id: idsRedesSociales }
-      });
-  
-      // Mapear los nombres de las redes sociales
-      const nombres = nombresRedesSociales.map(red => {
-        const redSocial = redesSocialesUsuario.find(r => r.red_id === red.red_id);
-        return {
-          red_id: red.red_id,
-          nombre: red.nombre,
-          nombreUsuarioAplicacion: redSocial.nombre_usuario_aplicacion
-        };
-      });
-  
-      return nombres;
+      return true; // La red social fue eliminada correctamente
     } catch (error) {
       throw error;
     }
@@ -115,5 +136,6 @@ export default {
   getAllRedesSociales,
   actualizarRedesSociales,
   getRedesSocialesUsuario,
-  obtenerRedesSocialesUsuario
+  obtenerRedesSocialesUsuario,
+  eliminarRedSocial
 };

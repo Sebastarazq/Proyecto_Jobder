@@ -1,7 +1,7 @@
 FROM node:18
-WORKDIR /Apijobder
+WORKDIR /apijobder
 COPY package.json .
 RUN npm install
 
 COPY . .
-CMD ["sh", "-c", "./start.sh"]
+CMD npm start

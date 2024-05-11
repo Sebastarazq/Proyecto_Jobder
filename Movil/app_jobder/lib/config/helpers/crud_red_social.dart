@@ -68,4 +68,22 @@ class RedesSocialesRepository {
       throw Exception('Error al obtener redes sociales del usuario: $error');
     }
   }
+
+  Future<void> eliminarRedSocial(int redId) async {
+    print('Eliminando red social con ID: $redId');
+    try {
+      final response = await _dio.delete(
+        'http://192.168.1.5:3000/api/v1/redes/desvincular/$redId', // Ruta para eliminar la red social por su ID
+      );
+      if (response.statusCode == 200) {
+        print('Red social eliminada correctamente');
+      } else if (response.statusCode == 404) {
+        throw Exception('La red social no existe');
+      } else {
+        throw Exception('Error al eliminar la red social: ${response.data['message']}');
+      }
+    } catch (error) {
+      throw Exception('Error al eliminar la red social: $error');
+    }
+  }
 }

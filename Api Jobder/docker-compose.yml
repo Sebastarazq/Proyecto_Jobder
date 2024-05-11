@@ -1,28 +1,7 @@
 version: '3.8'
 services:
-  mysqldb:
-    image: mysql
-    env_file: .env
-    environment:
-      - MYSQL_ROOT_PASSWORD=$PASSWORDDOCKER
-      - MYSQL_DATABASE=$DATABASEDOCKER
-    ports:
-      - $MYSQLDB_LOCAL_PORT:$MYSQLDB_DOCKER_PORT
-    networks:
-      - my-network
-    restart: always
-    healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
   app:
     build: .
-    depends_on:
-      mysqldb:
-        condition: service_healthy
-    links:
-      - mysqldb
     ports:
       - "3000:3000"
     networks:
