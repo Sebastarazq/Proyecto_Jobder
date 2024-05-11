@@ -4,10 +4,11 @@ import 'package:dio/dio.dart';
 
 class HabilidadesRepository {
   final Dio _dio = Dio();
+  static const String baseUrl = 'https://api-appjobder.azurewebsites.net/';
 
   Future<List<Habilidad>> getAllHabilidades() async {
     try {
-      final response = await _dio.get('http://192.168.1.5:3000/api/v1/habilidades/all');
+      final response = await _dio.get('${baseUrl}api/v1/habilidades/all');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         List<Habilidad> habilidades = data.map((json) => Habilidad.fromJson(json)).toList();
@@ -23,7 +24,7 @@ class HabilidadesRepository {
   Future<void> asociarHabilidadesUsuario(int usuarioId, List<int> habilidades) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/usuarioshabilidades/asociar2',
+        '${baseUrl}api/v1/usuarioshabilidades/asociar2',
         data: {
           'usuario_id': usuarioId,
           'habilidades': habilidades,
@@ -41,7 +42,7 @@ class HabilidadesRepository {
   
   Future<List<Habilidad>> getUsuarioHabilidades(int usuarioId) async {
     try {
-      final response = await _dio.get('http://192.168.1.5:3000/api/v1/usuarioshabilidades/$usuarioId');
+      final response = await _dio.get('${baseUrl}api/v1/usuarioshabilidades/$usuarioId');
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
         List<Habilidad> habilidades = data.map((json) => Habilidad.fromJson(json)).toList();
@@ -53,13 +54,12 @@ class HabilidadesRepository {
       throw Exception('Error al obtener habilidades del usuario: $error');
     }
   }
-  
 
   // Método para enviar los datos y actualizar las habilidades del usuario
   Future<void> actualizarHabilidadesUsuario(int usuarioId, List<int> nuevasHabilidades) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/usuarioshabilidades/actualizar',
+        '${baseUrl}api/v1/usuarioshabilidades/actualizar',
         data: {
           'usuario_id': usuarioId,
           'habilidades': nuevasHabilidades,
@@ -76,23 +76,23 @@ class HabilidadesRepository {
   }
 
   Future<HabilidadesUsuarioHabilidadResponse> getHabilidadesUsuarioHabilidad(int usuarioId) async {
-  try {
-    final response = await _dio.post('http://192.168.1.5:3000/api/v1/usuarioshabilidades/habilidades/$usuarioId');
-    if (response.statusCode == 200) {
-      List<dynamic> data = response.data['habilidades']; // Accedemos directamente a la lista de habilidades
-      print('Data: $data');
+    try {
+      final response = await _dio.post('${baseUrl}api/v1/usuarioshabilidades/habilidades/$usuarioId');
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data['habilidades']; // Accedemos directamente a la lista de habilidades
+        print('Data: $data');
 
-      // Mapear la lista de habilidades a objetos HabilidadUsuarioHabilidad
-      List<HabilidadUsuarioHabilidad> habilidades = List<HabilidadUsuarioHabilidad>.from(data.map((x) => HabilidadUsuarioHabilidad.fromJson(x)));
+        // Mapear la lista de habilidades a objetos HabilidadUsuarioHabilidad
+        List<HabilidadUsuarioHabilidad> habilidades = List<HabilidadUsuarioHabilidad>.from(data.map((x) => HabilidadUsuarioHabilidad.fromJson(x)));
 
-      // Retornar la respuesta con la lista de habilidades
-      return HabilidadesUsuarioHabilidadResponse(habilidades: habilidades);
-    } else {
-      String errorMessage = response.data['message'] ?? 'Error desconocido';
-      throw Exception('Error al obtener habilidades del usuario: $errorMessage');
+        // Retornar la respuesta con la lista de habilidades
+        return HabilidadesUsuarioHabilidadResponse(habilidades: habilidades);
+      } else {
+        String errorMessage = response.data['message'] ?? 'Error desconocido';
+        throw Exception('Error al obtener habilidades del usuario: $errorMessage');
+      }
+    } catch (error) {
+      throw Exception('Error al obtener habilidades del usuario: $error');
     }
-  } catch (error) {
-    throw Exception('Error al obtener habilidades del usuario: $error');
   }
-}
 }

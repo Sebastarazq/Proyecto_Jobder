@@ -2,11 +2,12 @@ import nodemailer from 'nodemailer';
 
 const emailRegistro = async (datos) => {
     const transport = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
+            user: "appjobder@gmail.com",
+            pass: "yrufzmmaqwdhjajr"
         }
     });
 
@@ -43,12 +44,13 @@ const emailRegistro = async (datos) => {
 
 const recuperacionPassword = async ({ email, nombre, resetCode }) => {
     const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
+            user: "appjobder@gmail.com",
+            pass: "yrufzmmaqwdhjajr"
+        }
     });
 
     try {
@@ -80,12 +82,13 @@ const recuperacionPassword = async ({ email, nombre, resetCode }) => {
 
 const notificarCambioContraseña = async ({ email, nombre }) => {
     const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: process.env.EMAIL_PORT,
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
+            user: "appjobder@gmail.com",
+            pass: "yrufzmmaqwdhjajr"
+        }
     });
 
     try {

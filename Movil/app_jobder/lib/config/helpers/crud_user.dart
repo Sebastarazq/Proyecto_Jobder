@@ -11,7 +11,7 @@ class UserRepository {
   Future<int> enviarCodigo(String token) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/confirm/$token',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/confirm/$token',
       );
 
       // Verificar si la respuesta es exitosa
@@ -39,7 +39,7 @@ class UserRepository {
   Future<void> createUser(UserModel user) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/register',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/register',
         data: user.toJson(),
       );
 
@@ -68,7 +68,7 @@ class UserRepository {
   Future<void> loginUser(UsuarioLogin user) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/login',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/login',
         data: user.toJson(),
       );
 
@@ -115,7 +115,7 @@ class UserRepository {
     try {
       // Realizar la solicitud para iniciar sesión
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/loginverificarhuella',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/loginverificarhuella',
         data: user.toJson(), // Convertir el objeto UsuarioLogin a JSON
       );
 
@@ -158,7 +158,7 @@ class UserRepository {
     try {
       // Realizar la solicitud para iniciar sesión con huella dactilar
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/loginhuella/$token',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/loginhuella/$token',
       );
 
       // Extraer los datos de usuario y token del servidor
@@ -191,7 +191,7 @@ class UserRepository {
   Future<void> sendPasswordResetCode(String email) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/forgot-password',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/forgot-password',
         data: {'email': email},
       );
 
@@ -221,7 +221,7 @@ class UserRepository {
   Future<void> resetPassword(String token, String newPassword) async {
     try {
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/password/reset/confirm/$token',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/password/reset/confirm/$token',
         data: {'newPassword': newPassword},
       );
 
@@ -252,7 +252,7 @@ class UserRepository {
       try {
         final usuarioId = int.parse(userId);
         final response = await _dio.get(
-          'http://192.168.1.5:3000/api/v1/users/$usuarioId', // Endpoint para obtener usuario por ID
+          'https://api-appjobder.azurewebsites.net/api/v1/users/$usuarioId', // Endpoint para obtener usuario por ID
         );
 
         // Verificar si la respuesta es exitosa
@@ -289,7 +289,7 @@ class UserRepository {
 
       // Realiza la solicitud POST al endpoint para subir la imagen
       final response = await _dio.post(
-        'http://192.168.1.5:3000/api/v1/users/perfilimg/$userId/upload',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/perfilimg/$userId/upload',
         data: formData,
         options: Options(
           headers: {
@@ -315,7 +315,7 @@ class UserRepository {
   Future<void> updateUserPartialInfo(String userId, PartialUserUpdate updates) async {
     try {
       final response = await _dio.patch(
-        'http://192.168.1.5:3000/api/v1/users/update/$userId',
+        'https://api-appjobder.azurewebsites.net/api/v1/users/update/$userId',
         data: updates.toJson(),
       );
 

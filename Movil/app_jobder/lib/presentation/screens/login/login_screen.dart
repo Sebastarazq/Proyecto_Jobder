@@ -21,6 +21,14 @@ class _LoginScreenState extends State<LoginScreen> {
   String _emailOrCellphone = ''; // Variable para almacenar el email o el número de celular
   String _password = '';
   bool _isUsingEmail = true; // Variable para indicar si se está utilizando el email
+  bool _showPassword = false; // Nuevo estado para controlar la visibilidad de la contraseña
+
+  //método para alternar la visibilidad de la contraseña
+  void _togglePasswordVisibility() {
+    setState(() {
+      _showPassword = !_showPassword;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +75,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   _password = value;
                 });
               },
-              obscureText: true,
-              decoration: const InputDecoration(
+              obscureText: !_showPassword, // Cambiar entre obscureText y !obscureText
+              decoration: InputDecoration(
                 hintText: 'Contraseña',
                 labelText: 'Contraseña',
+                // Agregar icono de ojo que cambia según la visibilidad de la contraseña
+                suffixIcon: IconButton(
+                  icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+                  onPressed: _togglePasswordVisibility,
+                ),
               ),
             ),
             const SizedBox(height: 10),

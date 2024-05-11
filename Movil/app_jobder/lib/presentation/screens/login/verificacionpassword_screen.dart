@@ -115,6 +115,7 @@ class NewPasswordScreen extends StatelessWidget {
     final TextEditingController _passwordController = TextEditingController();
     final TextEditingController _confirmPasswordController = TextEditingController();
     final UserRepository _userRepository = UserRepository();
+    
 
     void _showErrorDialog(String errorMessage) {
       showDialog(

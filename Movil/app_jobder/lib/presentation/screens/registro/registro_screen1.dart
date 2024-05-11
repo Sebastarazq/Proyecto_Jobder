@@ -20,6 +20,14 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
   String _password = ''; // Almacenar contraseña
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(); // Clave para validar el formulario
   final ScrollController _scrollController = ScrollController(); // Controlador del scroll
+  bool _showPassword = false; // Nuevo estado para controlar la visibilidad de la contraseña
+
+  //método para alternar la visibilidad de la contraseña
+  void _togglePasswordVisibility() {
+    setState(() {
+      _showPassword = !_showPassword;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +98,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
                   },
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly], // Asegura que solo se acepten números
                 ),
-                _buildTextField(
+                 _buildTextField(
                   label: 'Contraseña',
                   hintText: 'Ingresa tu contraseña',
                   onChanged: (value) {
@@ -104,7 +112,11 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
                     }
                     return null;
                   },
-                  obscureText: true,
+                  obscureText: !_showPassword, // Cambiar entre obscureText y !obscureText
+                  suffixIcon: IconButton(
+                    icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: _togglePasswordVisibility,
+                  ),
                 ),
                 _buildDropdownButtonFormField(
                   label: 'Género',
@@ -171,6 +183,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
     required String? Function(String?) validator,
     bool obscureText = false,
     List<TextInputFormatter>? inputFormatters, // Agrega un parámetro para los formateadores de entrada
+    Widget? suffixIcon, // Nuevo parámetro para el icono del sufijo
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,6 +204,7 @@ class _RegistroScreen1State extends State<RegistroScreen1> {
           decoration: InputDecoration(
             hintText: hintText,
             labelText: label,
+            suffixIcon: suffixIcon, // Agrega el icono del sufijo
           ),
         ),
         const SizedBox(height: 20),
